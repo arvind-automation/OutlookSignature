@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="none">
+  <defs>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="-8" stdDeviation="14" flood-color="#5c0e24" flood-opacity="0.3"/>
+    </filter>
+    <filter id="edgeGlow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="-1" stdDeviation="1.5" flood-color="#ffffff" flood-opacity="0.35"/>
+    </filter>
+    <linearGradient id="maroonDeep" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7a1232"/>
+      <stop offset="45%" stop-color="#8b1538"/>
+      <stop offset="100%" stop-color="#6e102c"/>
+    </linearGradient>
+    <linearGradient id="maroonMid" x1="10%" y1="100%" x2="95%" y2="10%">
+      <stop offset="0%" stop-color="#a52048"/>
+      <stop offset="100%" stop-color="#7a1232"/>
+    </linearGradient>
+    <linearGradient id="maroonLight" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#b02852"/>
+      <stop offset="100%" stop-color="#8b1538"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Back layer: bottom-left through right edge up to top-right -->
+  <path
+    filter="url(#softShadow)"
+    fill="url(#maroonDeep)"
+    d="M0 780
+       C160 700, 280 820, 420 740
+       C560 660, 680 580, 820 620
+       C980 670, 1100 480, 1220 280
+       C1300 160, 1380 80, 1440 0
+       L1440 900 L0 900 Z"
+  />
+
+  <!-- Mid ribbon layer -->
+  <path
+    filter="url(#edgeGlow)"
+    fill="url(#maroonMid)"
+    d="M0 900
+       C140 820, 260 880, 400 800
+       C540 720, 680 640, 840 680
+       C1000 720, 1120 520, 1240 340
+       C1320 220, 1380 140, 1440 80
+       L1440 900 Z"
+  />
+
+  <!-- Front accent wave -->
+  <path
+    filter="url(#softShadow)"
+    fill="url(#maroonLight)"
+    stroke="rgba(255,255,255,0.22)"
+    stroke-width="2"
+    d="M80 900
+       C240 840, 360 900, 520 820
+       C680 740, 820 700, 980 740
+       C1140 780, 1260 600, 1360 420
+       C1400 340, 1420 280, 1440 240
+       L1440 900 Z"
+  />
+
+  <!-- Highlight along main white/maroon edge -->
+  <path
+    stroke="rgba(255,255,255,0.45)"
+    stroke-width="1.5"
+    stroke-linecap="round"
+    d="M0 780
+       C160 700, 280 820, 420 740
+       C560 660, 680 580, 820 620
+       C980 670, 1100 480, 1220 280
+       C1300 160, 1380 80, 1440 0"
+  />
+
+  <!-- Secondary highlight on mid layer -->
+  <path
+    stroke="rgba(255,255,255,0.22)"
+    stroke-width="1"
+    stroke-linecap="round"
+    d="M0 900
+       C140 820, 260 880, 400 800
+       C540 720, 680 640, 840 680
+       C1000 720, 1120 520, 1240 340
+       C1320 220, 1380 140, 1440 80"
+  />
+</svg>

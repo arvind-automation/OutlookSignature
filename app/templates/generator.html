@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Signature Generator{% endblock %}
+{% block body %}
+<div id="generator-view" class="app">
+  <header class="app-header">
+    <img
+      class="brand-logo brand-logo--header"
+      src="{{ url_for('static', filename='assets/arvind-company-logo.png') }}"
+      alt="Arvind"
+    />
+    <div class="app-header__content">
+      <h1>Signature Generator</h1>
+      <p>Create your branded email signature and copy it into Outlook, Gmail, or Zoho Mail.</p>
+    </div>
+    <div class="app-header__meta">
+      <span id="user-team-badge" class="team-badge">{{ team_label }}</span>
+      <span id="user-email-badge" class="user-badge">{{ user_email }}</span>
+      {% if is_admin %}
+      <a href="{{ url_for('admin.overview') }}" class="btn btn-primary">Admin</a>
+      {% endif %}
+      <a href="{{ url_for('auth.team') }}" class="btn btn-tint">Change Template</a>
+      <form method="post" action="{{ url_for('auth.logout') }}" style="display:inline;">
+        <button type="submit" id="logout-btn" class="btn btn-ghost">Sign Out</button>
+      </form>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <aside class="form-panel">
+      <div class="panel-heading">
+        <h2>Your Details</h2>
+        <button type="button" id="reset-form" class="btn btn-ghost">Reset</button>
+      </div>
+
+      <form id="signature-form" autocomplete="off">
+        <div class="field">
+          <label for="company">Organization</label>
+          <select id="company" name="company" required>
+            <option value="">Select organization</option>
+            {% for org in organizations %}
+            <option value="{{ org.slug }}">{{ org.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" name="firstName" placeholder="FirstName" />
+          </div>
+          <div class="field">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" name="lastName" placeholder="LastName" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="name@arvind.in" />
+        </div>
+
+        <div class="field">
+          <label for="designation">Designation</label>
+          <input
+            type="text"
+            id="designation"
+            name="designation"
+            placeholder="Designation"
+          />
+        </div>
+
+        <div class="field">
+          <label for="phone">Phone Number</label>
+          <input type="text" id="phone" name="phone" placeholder="+91 XXXXX XXXXX" />
+        </div>
+
+        <div class="field">
+          <label for="organization">Organization Name</label>
+          <input type="text" id="organization" name="organization" placeholder="Organization Name" />
+        </div>
+
+        <div class="field">
+          <label for="website">Website</label>
+          <input
+            type="text"
+            id="website"
+            name="website"
+            value="www.arvind.com"
+            placeholder="www.arvind.com"
+            readonly
+          />
+        </div>
+
+        <div class="field">
+          <label for="address">Address</label>
+          <textarea id="address" name="address" rows="3" placeholder="Optional office address"></textarea>
+        </div>
+
+        <div id="manager-section" class="manager-section"{% if team != 'sales' %} hidden{% endif %}>
+          <h3 class="manager-section__title">Manager details</h3>
+          <p class="manager-section__hint">Add Level 1 and Level 2 managers for your Sales signature when needed.</p>
+
+          <div id="manager-level1" class="manager-level" hidden>
+            <div class="manager-level__header">
+              <h4 class="manager-level__title">Level 1 Manager</h4>
+              <button type="button" id="remove-manager-l1" class="btn btn-ghost">Remove</button>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="managerFirstName">First Name</label>
+                <input type="text" id="managerFirstName" name="managerFirstName" placeholder="Manager first name" />
+              </div>
+              <div class="field">
+                <label for="managerLastName">Last Name</label>
+                <input type="text" id="managerLastName" name="managerLastName" placeholder="Manager last name" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="managerDesignation">Designation</label>
+              <input type="text" id="managerDesignation" name="managerDesignation" placeholder="Manager designation" />
+            </div>
+            <div class="field">
+              <label for="managerEmail">Email</label>
+              <input type="email" id="managerEmail" name="managerEmail" placeholder="manager@arvind.in" />
+            </div>
+            <div class="field">
+              <label for="managerPhone">Phone</label>
+              <input type="text" id="managerPhone" name="managerPhone" placeholder="+91 XXXXX XXXXX" />
+            </div>
+          </div>
+
+          <div id="manager-level2" class="manager-level" hidden>
+            <div class="manager-level__header">
+              <h4 class="manager-level__title">Level 2 Manager</h4>
+              <button type="button" id="remove-manager-l2" class="btn btn-ghost">Remove</button>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="manager2FirstName">First Name</label>
+                <input type="text" id="manager2FirstName" name="manager2FirstName" placeholder="Manager first name" />
+              </div>
+              <div class="field">
+                <label for="manager2LastName">Last Name</label>
+                <input type="text" id="manager2LastName" name="manager2LastName" placeholder="Manager last name" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="manager2Designation">Designation</label>
+              <input type="text" id="manager2Designation" name="manager2Designation" placeholder="Manager designation" />
+            </div>
+            <div class="field">
+              <label for="manager2Email">Email</label>
+              <input type="email" id="manager2Email" name="manager2Email" placeholder="manager@arvind.in" />
+            </div>
+            <div class="field">
+              <label for="manager2Phone">Phone</label>
+              <input type="text" id="manager2Phone" name="manager2Phone" placeholder="+91 XXXXX XXXXX" />
+            </div>
+          </div>
+
+          <button type="button" id="add-manager-btn" class="btn btn-primary btn-block">Add Manager</button>
+        </div>
+      </form>
+    </aside>
+
+    <section class="preview-panel">
+      <div class="preview-toolbar">
+        <h2>Live Preview</h2>
+        <div class="preview-actions">
+          <button type="button" id="copy-rendered" class="btn btn-primary">Copy Signature</button>
+          <button type="button" id="copy-html" class="btn btn-secondary">Copy HTML Code</button>
+        </div>
+      </div>
+
+      <div id="copy-status" class="copy-status" aria-live="polite"></div>
+
+      <div id="preview-view" class="preview-view">
+        <div class="preview-frame">
+          <div id="signature-preview" class="signature-preview"></div>
+        </div>
+      </div>
+
+      <div class="template-section">
+        <h3>Choose Template</h3>
+        <div id="template-list" class="template-list">
+          {% for template in templates %}
+          <button
+            type="button"
+            class="template-card{% if template.id == 'standard' %} is-active{% endif %}"
+            data-template="{{ template.id }}"
+          >
+            <span class="template-card__name">{{ template.name }}</span>
+            <span class="template-card__desc">{{ template.description }}</span>
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.__SIG_BOOT__ = {
+    userEmail: {{ user_email|tojson }},
+    team: {{ team|tojson }},
+    prefill: {{ profile_prefill|tojson }}
+  };
+</script>
+<script id="org-data" type="application/json">
+[
+{% for org in organizations %}
+  {{ org.to_dict()|tojson }}{% if not loop.last %},{% endif %}
+{% endfor %}
+]
+</script>
+<script src="{{ url_for('static', filename='js/html2canvas.min.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/generator.js') }}" defer></script>
+{% endblock %}

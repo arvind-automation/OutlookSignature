@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Select Template — Signature Generator{% endblock %}
+{% block body %}
+<div id="team-view" class="auth-view">
+  <img
+    class="auth-wave"
+    src="{{ url_for('static', filename='assets/auth-wave.svg') }}"
+    alt=""
+    aria-hidden="true"
+  />
+  <img
+    class="auth-logo-fade"
+    src="{{ url_for('static', filename='assets/arvind-company-logo.png') }}"
+    alt=""
+    aria-hidden="true"
+  />
+  <a class="auth-logo-corner" href="{{ url_for('auth.team') }}">
+    <img
+      src="{{ url_for('static', filename='assets/arvind-company-logo.png') }}"
+      alt="Arvind"
+    />
+  </a>
+
+  <div class="auth-card auth-card--wide">
+    <div class="auth-brand auth-brand--center">
+      <div>
+        <p class="auth-eyebrow">Choose a template</p>
+        <h1>Select Your Template</h1>
+        <p id="team-welcome">Welcome, {{ user_email }}</p>
+      </div>
+    </div>
+
+    <div class="team-select">
+      <div class="team-grid">
+        <form method="post" action="{{ url_for('auth.team') }}">
+          <input type="hidden" name="team" value="gcc" />
+          <button type="submit" class="team-card" data-team="gcc">
+            <span class="team-card__icon">ST</span>
+            <span class="team-card__title">{{ team_labels.gcc }}</span>
+            <span class="team-card__desc">Includes your professional profile details.</span>
+          </button>
+        </form>
+
+        <form method="post" action="{{ url_for('auth.team') }}">
+          <input type="hidden" name="team" value="sales" />
+          <button type="submit" class="team-card" data-team="sales">
+            <span class="team-card__icon">HT</span>
+            <span class="team-card__title">{{ team_labels.sales }}</span>
+            <span class="team-card__desc">Includes your professional profile details and reporting hierarchy.</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <form method="post" action="{{ url_for('auth.logout') }}">
+      <button type="submit" id="logout-from-team" class="btn btn-ghost btn-block">Sign Out</button>
+    </form>
+    {% if is_admin %}
+    <p class="team-admin-link">
+      <a href="{{ url_for('admin.overview') }}" class="btn btn-primary">Admin</a>
+    </p>
+    {% endif %}
+  </div>
+
+  <div id="team-preview-popup" class="team-preview-popup" hidden aria-hidden="true">
+    <p class="team-preview-popup__label">Live Preview</p>
+    <div class="team-preview-popup__frame">
+      <div id="team-preview-html" class="signature-preview team-preview-popup__signature"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/team.js') }}"></script>
+{% endblock %}
