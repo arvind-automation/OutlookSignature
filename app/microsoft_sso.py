@@ -135,8 +135,19 @@ def _map_person_to_manager_fields(person: dict[str, Any] | None) -> dict[str, st
     }
 
 
+def _map_person_to_manager2_fields(person: dict[str, Any] | None) -> dict[str, str]:
+    first, last = _graph_names(person)
+    return {
+        "manager2FirstName": first,
+        "manager2LastName": last,
+        "manager2Designation": (person.get("jobTitle") or "").strip() if person else "",
+        "manager2Email": _graph_email(person),
+        "manager2Phone": _graph_phone(person),
+    }
+
+
 def fetch_graph_profile(access_token: str) -> dict[str, str]:
-    """Fetch /me (+ optional /me/manager) and map to generator form prefill keys."""
+    """Fetch /me (+ optional L1/L2 managers) and map to generator form prefill keys."""
     if not access_token:
         return {}
 
@@ -170,6 +181,7 @@ def fetch_graph_profile(access_token: str) -> dict[str, str]:
         "address": (me.get("officeLocation") or "").strip(),
     }
 
+    has_l1 = False
     try:
         mgr_resp = requests.get(
             f"{GRAPH_ME_URL}/manager",
@@ -179,6 +191,7 @@ def fetch_graph_profile(access_token: str) -> dict[str, str]:
         )
         if mgr_resp.ok:
             prefill.update(_map_person_to_manager_fields(mgr_resp.json() or {}))
+            has_l1 = True
         elif mgr_resp.status_code not in (404, 403):
             current_app.logger.warning(
                 "Graph /me/manager failed status=%s body=%s",
@@ -187,5 +200,24 @@ def fetch_graph_profile(access_token: str) -> dict[str, str]:
             )
     except Exception:  # noqa: BLE001
         current_app.logger.exception("Graph /me/manager request failed")
+
+    if has_l1:
+        try:
+            mgr2_resp = requests.get(
+                f"{GRAPH_ME_URL}/manager/manager",
+                headers=headers,
+                params={"$select": GRAPH_MANAGER_SELECT},
+                timeout=10,
+            )
+            if mgr2_resp.ok:
+                prefill.update(_map_person_to_manager2_fields(mgr2_resp.json() or {}))
+            elif mgr2_resp.status_code not in (404, 403):
+                current_app.logger.warning(
+                    "Graph /me/manager/manager failed status=%s body=%s",
+                    mgr2_resp.status_code,
+                    mgr2_resp.text[:300],
+                )
+        except Exception:  # noqa: BLE001
+            current_app.logger.exception("Graph /me/manager/manager request failed")
 
     return {k: v for k, v in prefill.items() if v}

@@ -21,7 +21,6 @@ class Config:
     FLASK_ENV = os.getenv("FLASK_ENV", "development")
     INIT_DB_STRICT_ASSETS = os.getenv("INIT_DB_STRICT_ASSETS", "0") == "1"
     INIT_DB_ALLOW_RESET = os.getenv("INIT_DB_ALLOW_RESET", "0") == "1"
-    DEMO_PASSWORD = "123456789"
     ALLOWED_EMAIL_SUFFIXES = ("@arvind.in", "@arvind.com", "@arvindlimited.com")
     TEAM_LABELS = {
         "gcc": "Standard Template",

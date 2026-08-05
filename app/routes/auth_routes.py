@@ -1,7 +1,6 @@
 from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for
 
 from app.auth import (
-    authenticate,
     current_user,
     get_or_create_sso_user,
     is_admin,
@@ -34,7 +33,7 @@ def index():
     return redirect(url_for("generator.generator"))
 
 
-@auth_bp.route("/login", methods=["GET", "POST"])
+@auth_bp.route("/login", methods=["GET"])
 def login():
     user = current_user()
     if user:
@@ -42,20 +41,8 @@ def login():
             return redirect(url_for("generator.generator"))
         return redirect(url_for("auth.team"))
 
-    error = ""
-    email_value = ""
-    if request.method == "POST":
-        email_value = (request.form.get("email") or "").strip()
-        password = request.form.get("password") or ""
-        authed, error = authenticate(email_value, password)
-        if authed:
-            login_user_session(authed)
-            return redirect(url_for("auth.team"))
-
     return render_template(
         "login.html",
-        error=error,
-        email_value=email_value,
         microsoft_sso_enabled=microsoft_sso_enabled(),
     )
 

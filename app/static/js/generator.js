@@ -48,9 +48,10 @@
     "phone",
     "organization",
     "address",
-  ].concat(MANAGER_L1_KEYS);
+  ].concat(MANAGER_L1_KEYS, MANAGER_L2_KEYS);
 
-  var DETAIL_KEYS = [
+  // Editable: company (Organization), address. Everything else is locked.
+  var LOCKED_FIELD_KEYS = [
     "firstName",
     "lastName",
     "email",
@@ -58,7 +59,6 @@
     "phone",
     "organization",
     "website",
-    "address",
   ].concat(MANAGER_L1_KEYS, MANAGER_L2_KEYS);
 
   function bootPrefill() {
@@ -120,17 +120,23 @@
     }
   }
 
-  function clearManagerKeys(keys) {
-    keys.forEach(function (key) {
-      if (fields[key]) fields[key].value = "";
-    });
-  }
-
   function hasAnyData(values, keys) {
     values = values || {};
     return keys.some(function (key) {
       return !!(values[key] || "").trim();
     });
+  }
+
+  function resolveManagerLevel(formValues) {
+    var form = formValues || {};
+    var prefill = bootPrefill();
+    if (hasAnyData(form, MANAGER_L2_KEYS) || hasAnyData(prefill, MANAGER_L2_KEYS)) {
+      return 2;
+    }
+    if (hasAnyData(form, MANAGER_L1_KEYS) || hasAnyData(prefill, MANAGER_L1_KEYS)) {
+      return 1;
+    }
+    return 0;
   }
 
   function getFormValues() {
@@ -161,16 +167,17 @@
     if (fields.website) fields.website.value = FIXED_WEBSITE;
   }
 
-  function setDetailFieldsEnabled(enabled) {
-    DETAIL_KEYS.forEach(function (key) {
-      if (!fields[key] || key === "website") return;
-      fields[key].disabled = !enabled;
+  function lockReadOnlyFields() {
+    LOCKED_FIELD_KEYS.forEach(function (key) {
+      if (!fields[key]) return;
+      fields[key].disabled = true;
+      if (key === "website") {
+        fields[key].readOnly = true;
+        fields[key].value = FIXED_WEBSITE;
+      }
     });
-    if (fields.website) {
-      fields.website.value = FIXED_WEBSITE;
-      fields.website.readOnly = true;
-      fields.website.disabled = false;
-    }
+    if (fields.company) fields.company.disabled = false;
+    if (fields.address) fields.address.disabled = false;
   }
 
   function syncManagerSection() {
@@ -181,42 +188,6 @@
 
     if (els.managerLevel1) els.managerLevel1.hidden = state.managerLevel < 1;
     if (els.managerLevel2) els.managerLevel2.hidden = state.managerLevel < 2;
-
-    if (els.addManagerBtn) {
-      if (state.managerLevel >= 2) {
-        els.addManagerBtn.hidden = true;
-      } else {
-        els.addManagerBtn.hidden = false;
-        els.addManagerBtn.textContent =
-          state.managerLevel === 0 ? "Add Manager" : "Add Level 2 Manager";
-      }
-    }
-  }
-
-  function handleAddManager() {
-    if (state.managerLevel < 2) {
-      state.managerLevel += 1;
-      syncManagerSection();
-      renderPreview();
-      scheduleSave();
-    }
-  }
-
-  function handleRemoveManagerL1() {
-    clearManagerKeys(MANAGER_L1_KEYS);
-    clearManagerKeys(MANAGER_L2_KEYS);
-    state.managerLevel = 0;
-    syncManagerSection();
-    renderPreview();
-    scheduleSave();
-  }
-
-  function handleRemoveManagerL2() {
-    clearManagerKeys(MANAGER_L2_KEYS);
-    state.managerLevel = 1;
-    syncManagerSection();
-    renderPreview();
-    scheduleSave();
   }
 
   function showStatus(message, isError) {
@@ -300,26 +271,12 @@
           : applyPrefillToEmpty(data.form || baseFormDefaults());
         setFormValues(form);
         if (form.templateId) state.templateId = form.templateId;
-        if (hasAnyData(form, MANAGER_L2_KEYS)) {
-          state.managerLevel = 2;
-        } else if (hasAnyData(form, MANAGER_L1_KEYS)) {
-          state.managerLevel = 1;
-        } else {
-          state.managerLevel = 0;
-        }
+        state.managerLevel = state.team === "sales" ? resolveManagerLevel(form) : 0;
         var boot = window.__SIG_BOOT__ || {};
         if (boot.userEmail && fields.email) {
           fields.email.value = boot.userEmail;
         }
-        // Sales: surface Level 1 manager section when Graph provided manager data.
-        if (
-          state.team === "sales" &&
-          state.managerLevel < 1 &&
-          hasAnyData(bootPrefill(), MANAGER_L1_KEYS)
-        ) {
-          state.managerLevel = 1;
-        }
-        setDetailFieldsEnabled(!!fields.company.value);
+        lockReadOnlyFields();
         syncManagerSection();
         renderTemplateSelection();
         return renderPreview();
@@ -329,11 +286,11 @@
   function handleCompanyChange() {
     var slug = fields.company.value;
     var org = state.orgsBySlug[slug];
-    setDetailFieldsEnabled(!!org);
     if (org) {
       fields.organization.value = org.organization;
       fields.website.value = FIXED_WEBSITE;
     }
+    lockReadOnlyFields();
     renderPreview();
     scheduleSave();
   }
@@ -485,22 +442,20 @@
     values.company = DEFAULT_FORM.company;
     values.organization = DEFAULT_FORM.organization;
     values.website = FIXED_WEBSITE;
-    MANAGER_L2_KEYS.forEach(function (k) {
-      values[k] = "";
-    });
-    if (state.team === "sales" && hasAnyData(bootPrefill(), MANAGER_L1_KEYS)) {
-      state.managerLevel = 1;
-    } else {
-      state.managerLevel = 0;
-      if (!hasAnyData(bootPrefill(), MANAGER_L1_KEYS)) {
-        MANAGER_L1_KEYS.forEach(function (k) {
-          values[k] = "";
-        });
-      }
+    state.managerLevel = state.team === "sales" ? resolveManagerLevel(values) : 0;
+    if (state.managerLevel < 2) {
+      MANAGER_L2_KEYS.forEach(function (k) {
+        if (!bootPrefill()[k]) values[k] = "";
+      });
+    }
+    if (state.managerLevel < 1) {
+      MANAGER_L1_KEYS.forEach(function (k) {
+        values[k] = "";
+      });
     }
     setFormValues(values);
     state.templateId = "standard";
-    setDetailFieldsEnabled(false);
+    lockReadOnlyFields();
     syncManagerSection();
     renderPreview();
     scheduleSave();
@@ -513,21 +468,11 @@
   }
 
   function bindEvents() {
-    Object.keys(fields).forEach(function (key) {
-      if (key === "company" || !fields[key]) return;
-      fields[key].addEventListener("input", onFormInput);
-      fields[key].addEventListener("change", onFormInput);
-    });
+    if (fields.address) {
+      fields.address.addEventListener("input", onFormInput);
+      fields.address.addEventListener("change", onFormInput);
+    }
     fields.company.addEventListener("change", handleCompanyChange);
-    if (els.addManagerBtn) {
-      els.addManagerBtn.addEventListener("click", handleAddManager);
-    }
-    if (els.removeManagerL1) {
-      els.removeManagerL1.addEventListener("click", handleRemoveManagerL1);
-    }
-    if (els.removeManagerL2) {
-      els.removeManagerL2.addEventListener("click", handleRemoveManagerL2);
-    }
     els.form.addEventListener("submit", function (e) {
       e.preventDefault();
     });
@@ -558,9 +503,6 @@
       managerSection: document.getElementById("manager-section"),
       managerLevel1: document.getElementById("manager-level1"),
       managerLevel2: document.getElementById("manager-level2"),
-      addManagerBtn: document.getElementById("add-manager-btn"),
-      removeManagerL1: document.getElementById("remove-manager-l1"),
-      removeManagerL2: document.getElementById("remove-manager-l2"),
     };
 
     fields = {
@@ -591,7 +533,7 @@
 
     syncManagerSection();
     bindEvents();
-    setDetailFieldsEnabled(false);
+    lockReadOnlyFields();
     loadSignature();
   }
 

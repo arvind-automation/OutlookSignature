@@ -46,17 +46,17 @@
         <div class="field-row">
           <div class="field">
             <label for="firstName">First Name</label>
-            <input type="text" id="firstName" name="firstName" placeholder="FirstName" />
+            <input type="text" id="firstName" name="firstName" placeholder="FirstName" disabled />
           </div>
           <div class="field">
             <label for="lastName">Last Name</label>
-            <input type="text" id="lastName" name="lastName" placeholder="LastName" />
+            <input type="text" id="lastName" name="lastName" placeholder="LastName" disabled />
           </div>
         </div>
 
         <div class="field">
           <label for="email">Email Address</label>
-          <input type="email" id="email" name="email" placeholder="name@arvind.in" />
+          <input type="email" id="email" name="email" placeholder="name@arvind.in" disabled />
         </div>
 
         <div class="field">
@@ -66,17 +66,18 @@
             id="designation"
             name="designation"
             placeholder="Designation"
+            disabled
           />
         </div>
 
         <div class="field">
           <label for="phone">Phone Number</label>
-          <input type="text" id="phone" name="phone" placeholder="+91 XXXXX XXXXX" />
+          <input type="text" id="phone" name="phone" placeholder="+91 XXXXX XXXXX" disabled />
         </div>
 
         <div class="field">
           <label for="organization">Organization Name</label>
-          <input type="text" id="organization" name="organization" placeholder="Organization Name" />
+          <input type="text" id="organization" name="organization" placeholder="Organization Name" disabled />
         </div>
 
         <div class="field">
@@ -88,6 +89,7 @@
             value="www.arvind.com"
             placeholder="www.arvind.com"
             readonly
+            disabled
           />
         </div>
 
@@ -98,67 +100,63 @@
 
         <div id="manager-section" class="manager-section"{% if team != 'sales' %} hidden{% endif %}>
           <h3 class="manager-section__title">Manager details</h3>
-          <p class="manager-section__hint">Add Level 1 and Level 2 managers for your Sales signature when needed.</p>
+          <p class="manager-section__hint">Add Level 1 and Level 2 managers when needed.</p>
 
           <div id="manager-level1" class="manager-level" hidden>
             <div class="manager-level__header">
               <h4 class="manager-level__title">Level 1 Manager</h4>
-              <button type="button" id="remove-manager-l1" class="btn btn-ghost">Remove</button>
             </div>
             <div class="field-row">
               <div class="field">
                 <label for="managerFirstName">First Name</label>
-                <input type="text" id="managerFirstName" name="managerFirstName" placeholder="Manager first name" />
+                <input type="text" id="managerFirstName" name="managerFirstName" placeholder="Manager first name" disabled />
               </div>
               <div class="field">
                 <label for="managerLastName">Last Name</label>
-                <input type="text" id="managerLastName" name="managerLastName" placeholder="Manager last name" />
+                <input type="text" id="managerLastName" name="managerLastName" placeholder="Manager last name" disabled />
               </div>
             </div>
             <div class="field">
               <label for="managerDesignation">Designation</label>
-              <input type="text" id="managerDesignation" name="managerDesignation" placeholder="Manager designation" />
+              <input type="text" id="managerDesignation" name="managerDesignation" placeholder="Manager designation" disabled />
             </div>
             <div class="field">
               <label for="managerEmail">Email</label>
-              <input type="email" id="managerEmail" name="managerEmail" placeholder="manager@arvind.in" />
+              <input type="email" id="managerEmail" name="managerEmail" placeholder="manager@arvind.in" disabled />
             </div>
             <div class="field">
               <label for="managerPhone">Phone</label>
-              <input type="text" id="managerPhone" name="managerPhone" placeholder="+91 XXXXX XXXXX" />
+              <input type="text" id="managerPhone" name="managerPhone" placeholder="+91 XXXXX XXXXX" disabled />
             </div>
           </div>
 
           <div id="manager-level2" class="manager-level" hidden>
             <div class="manager-level__header">
               <h4 class="manager-level__title">Level 2 Manager</h4>
-              <button type="button" id="remove-manager-l2" class="btn btn-ghost">Remove</button>
             </div>
             <div class="field-row">
               <div class="field">
                 <label for="manager2FirstName">First Name</label>
-                <input type="text" id="manager2FirstName" name="manager2FirstName" placeholder="Manager first name" />
+                <input type="text" id="manager2FirstName" name="manager2FirstName" placeholder="Manager first name" disabled />
               </div>
               <div class="field">
                 <label for="manager2LastName">Last Name</label>
-                <input type="text" id="manager2LastName" name="manager2LastName" placeholder="Manager last name" />
+                <input type="text" id="manager2LastName" name="manager2LastName" placeholder="Manager last name" disabled />
               </div>
             </div>
             <div class="field">
               <label for="manager2Designation">Designation</label>
-              <input type="text" id="manager2Designation" name="manager2Designation" placeholder="Manager designation" />
+              <input type="text" id="manager2Designation" name="manager2Designation" placeholder="Manager designation" disabled />
             </div>
             <div class="field">
               <label for="manager2Email">Email</label>
-              <input type="email" id="manager2Email" name="manager2Email" placeholder="manager@arvind.in" />
+              <input type="email" id="manager2Email" name="manager2Email" placeholder="manager@arvind.in" disabled />
             </div>
             <div class="field">
               <label for="manager2Phone">Phone</label>
-              <input type="text" id="manager2Phone" name="manager2Phone" placeholder="+91 XXXXX XXXXX" />
+              <input type="text" id="manager2Phone" name="manager2Phone" placeholder="+91 XXXXX XXXXX" disabled />
             </div>
           </div>
-
-          <button type="button" id="add-manager-btn" class="btn btn-primary btn-block">Add Manager</button>
         </div>
       </form>
     </aside>
@@ -181,7 +179,7 @@
       </div>
 
       <div class="template-section">
-        <h3>Choose Template</h3>
+        <h3>Choose Layout</h3>
         <div id="template-list" class="template-list">
           {% for template in templates %}
           <button

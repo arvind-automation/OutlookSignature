@@ -16,7 +16,7 @@ PAGE_SIZE = 50
 ACTION_LABELS = {
     "login_success": "Signed in",
     "login_failed": "Login failed",
-    "team_selected": "Team selected",
+    "team_selected": "Template Selected",
     "signature_saved": "Signature saved",
     "signature_copied": "Signature copied",
     "html_copied": "HTML copied",
@@ -29,7 +29,7 @@ LOGIN_FAIL_REASONS = {
     "invalid_domain": "email domain not allowed",
 }
 
-TEMPLATE_LABELS = {
+LAYOUT_LABELS = {
     "standard": "Standard",
     "compact": "Compact",
     "minimal": "Minimal",
@@ -38,8 +38,8 @@ TEMPLATE_LABELS = {
 KEY_LABELS = {
     "email": "Email",
     "reason": "Reason",
-    "team": "Team",
-    "templateId": "Template",
+    "team": "Template",
+    "templateId": "Layout",
     "company": "Org",
     "organization": "Org",
 }
@@ -70,7 +70,7 @@ def _format_value(key: str, value) -> str:
     if key == "team":
         return _team_label(str(value))
     if key == "templateId":
-        return TEMPLATE_LABELS.get(str(value), str(value).capitalize())
+        return LAYOUT_LABELS.get(str(value), str(value).capitalize())
     if key == "reason":
         return LOGIN_FAIL_REASONS.get(str(value), str(value).replace("_", " "))
     if isinstance(value, (dict, list)):
@@ -108,19 +108,19 @@ def format_audit_details(action: str, details) -> str:
 
     if action == "team_selected":
         label = _team_label(details.get("team"))
-        return f"Selected team: {label}" if label else "Selected a team"
+        return f"Selected template: {label}" if label else "Selected a template"
 
     if action == "signature_saved":
         bits = []
-        template = _format_value("templateId", details.get("templateId"))
+        layout = _format_value("templateId", details.get("templateId"))
         company = details.get("company")
         team = _team_label(details.get("team"))
-        if template:
-            bits.append(f"Template: {template}")
+        if layout:
+            bits.append(f"Layout: {layout}")
         if company:
             bits.append(f"Org: {company}")
         if team:
-            bits.append(f"Team: {team}")
+            bits.append(f"Template: {team}")
         if bits:
             return "Saved signature — " + " · ".join(bits)
         return "Saved signature"
