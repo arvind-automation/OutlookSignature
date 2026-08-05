@@ -21,7 +21,6 @@ class Config:
     FLASK_ENV = os.getenv("FLASK_ENV", "development")
     INIT_DB_STRICT_ASSETS = os.getenv("INIT_DB_STRICT_ASSETS", "0") == "1"
     INIT_DB_ALLOW_RESET = os.getenv("INIT_DB_ALLOW_RESET", "0") == "1"
-    DEMO_PASSWORD = "123456789"
     ALLOWED_EMAIL_SUFFIXES = ("@arvind.in", "@arvind.com", "@arvindlimited.com")
     TEAM_LABELS = {
         "gcc": "Standard Template",
@@ -37,5 +36,5 @@ class Config:
         os.getenv("MICROSOFT_SSO_ENABLED", "0") == "1"
         and bool(AZURE_CLIENT_ID and AZURE_CLIENT_SECRET and AZURE_TENANT_ID)
     )
-    MICROSOFT_SSO_SCOPES = ["User.Read"]
+    MICROSOFT_SSO_SCOPES = ["User.Read", "User.Read.All"]
 

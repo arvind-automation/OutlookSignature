@@ -13,8 +13,9 @@ GRAPH_ME_SELECT = (
     "businessPhones,companyName,officeLocation,displayName"
 )
 GRAPH_MANAGER_SELECT = (
-    "givenName,surname,mail,userPrincipalName,jobTitle,mobilePhone,businessPhones"
+    "id,givenName,surname,mail,userPrincipalName,jobTitle,mobilePhone,businessPhones"
 )
+GRAPH_USERS_URL = "https://graph.microsoft.com/v1.0/users"
 
 
 def microsoft_sso_enabled() -> bool:
@@ -135,8 +136,63 @@ def _map_person_to_manager_fields(person: dict[str, Any] | None) -> dict[str, st
     }
 
 
+def _map_person_to_manager2_fields(person: dict[str, Any] | None) -> dict[str, str]:
+    first, last = _graph_names(person)
+    return {
+        "manager2FirstName": first,
+        "manager2LastName": last,
+        "manager2Designation": (person.get("jobTitle") or "").strip() if person else "",
+        "manager2Email": _graph_email(person),
+        "manager2Phone": _graph_phone(person),
+    }
+
+
+def _same_graph_person(a: dict[str, Any] | None, b: dict[str, Any] | None) -> bool:
+    """True when two Graph user objects refer to the same person."""
+    a = a or {}
+    b = b or {}
+    a_id = (a.get("id") or "").strip()
+    b_id = (b.get("id") or "").strip()
+    if a_id and b_id:
+        return a_id == b_id
+    a_email = _graph_email(a)
+    b_email = _graph_email(b)
+    return bool(a_email) and a_email == b_email
+
+
+def _fetch_user_manager(
+    headers: dict[str, str],
+    user_id: str,
+    *,
+    log_label: str,
+) -> dict[str, Any] | None:
+    """Fetch a user's direct manager via GET /users/{id}/manager."""
+    user_id = (user_id or "").strip()
+    if not user_id:
+        return None
+    try:
+        resp = requests.get(
+            f"{GRAPH_USERS_URL}/{user_id}/manager",
+            headers=headers,
+            params={"$select": GRAPH_MANAGER_SELECT},
+            timeout=10,
+        )
+        if resp.ok:
+            return resp.json() or {}
+        if resp.status_code not in (404, 403):
+            current_app.logger.warning(
+                "Graph %s failed status=%s body=%s",
+                log_label,
+                resp.status_code,
+                resp.text[:300],
+            )
+    except Exception:  # noqa: BLE001
+        current_app.logger.exception("Graph %s request failed", log_label)
+    return None
+
+
 def fetch_graph_profile(access_token: str) -> dict[str, str]:
-    """Fetch /me (+ optional /me/manager) and map to generator form prefill keys."""
+    """Fetch /me (+ optional L1/L2 managers) and map to generator form prefill keys."""
     if not access_token:
         return {}
 
@@ -170,6 +226,7 @@ def fetch_graph_profile(access_token: str) -> dict[str, str]:
         "address": (me.get("officeLocation") or "").strip(),
     }
 
+    l1: dict[str, Any] | None = None
     try:
         mgr_resp = requests.get(
             f"{GRAPH_ME_URL}/manager",
@@ -178,7 +235,8 @@ def fetch_graph_profile(access_token: str) -> dict[str, str]:
             timeout=10,
         )
         if mgr_resp.ok:
-            prefill.update(_map_person_to_manager_fields(mgr_resp.json() or {}))
+            l1 = mgr_resp.json() or {}
+            prefill.update(_map_person_to_manager_fields(l1))
         elif mgr_resp.status_code not in (404, 403):
             current_app.logger.warning(
                 "Graph /me/manager failed status=%s body=%s",
@@ -187,5 +245,19 @@ def fetch_graph_profile(access_token: str) -> dict[str, str]:
             )
     except Exception:  # noqa: BLE001
         current_app.logger.exception("Graph /me/manager request failed")
+
+    l1_id = (l1.get("id") or "").strip() if l1 else ""
+    if l1_id:
+        l2 = _fetch_user_manager(
+            headers,
+            l1_id,
+            log_label=f"/users/{l1_id}/manager",
+        )
+        if l2 and not _same_graph_person(l1, l2):
+            prefill.update(_map_person_to_manager2_fields(l2))
+        elif l2 and _same_graph_person(l1, l2):
+            current_app.logger.info(
+                "Graph L2 manager skipped: same person as L1 (id=%s)", l1_id
+            )
 
     return {k: v for k, v in prefill.items() if v}

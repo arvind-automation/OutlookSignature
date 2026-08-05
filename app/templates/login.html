@@ -26,7 +26,7 @@
       <div>
         <p class="auth-eyebrow">Welcome back</p>
         <h1>Signature Generator</h1>
-        <p>Sign in with your Arvind account to continue</p>
+        <p>Sign in with your Arvind Microsoft account to continue</p>
       </div>
     </div>
 
@@ -48,42 +48,12 @@
       </svg>
       <span>Sign in with Microsoft</span>
     </a>
-    <div class="auth-divider" role="separator"><span>or</span></div>
-    {% endif %}
-
-    <p class="auth-hint">
-      Password demo: any <strong>@arvind.in</strong> email with password
-      <strong>123456789</strong>
+    {% else %}
+    <p class="auth-error" aria-live="polite">
+      Microsoft sign-in is not configured. Set Azure credentials and enable
+      <strong>MICROSOFT_SSO_ENABLED</strong> in the environment.
     </p>
-
-    <form id="login-form" class="auth-form" method="post" action="{{ url_for('auth.login') }}" autocomplete="off">
-      <div class="field">
-        <label for="login-email">Email Address</label>
-        <input
-          type="email"
-          id="login-email"
-          name="email"
-          placeholder="name@arvind.in"
-          value="{{ email_value or '' }}"
-          required
-        />
-      </div>
-
-      <div class="field">
-        <label for="login-password">Password</label>
-        <input
-          type="password"
-          id="login-password"
-          name="password"
-          placeholder="Enter your password"
-          required
-        />
-      </div>
-
-      <p id="login-error" class="auth-error" aria-live="polite">{{ error or '' }}</p>
-
-      <button type="submit" class="btn btn-primary btn-block">Sign In</button>
-    </form>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

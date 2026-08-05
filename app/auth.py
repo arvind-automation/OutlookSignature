@@ -45,48 +45,6 @@ def write_audit(action: str, user_id=None, details=None) -> None:
     db.session.commit()
 
 
-def authenticate(email: str, password: str) -> tuple[User | None, str]:
-    """Return (user, error_message). Preserves original demo login behavior."""
-    email = (email or "").strip().lower()
-    password = (password or "").strip()
-    demo_password = current_app.config["DEMO_PASSWORD"]
-
-    if not email:
-        return None, "Please enter your email address."
-
-    if not is_allowed_email(email):
-        write_audit("login_failed", details={"email": email, "reason": "invalid_domain"})
-        return None, "Use your Arvind email address (for example, name@arvind.in)."
-
-    if password != demo_password:
-        write_audit("login_failed", details={"email": email, "reason": "bad_password"})
-        return None, "Incorrect password. Use 123456789 for demo access."
-
-    user = User.query.filter_by(email=email).first()
-    if user is None:
-        profile = DEMO_PROFILES.get(email, {})
-        first, last = names_from_email(email)
-        user = User(
-            email=email,
-            first_name=profile.get("first_name") or first or None,
-            last_name=profile.get("last_name") or last or None,
-        )
-        user.set_password(demo_password)
-        db.session.add(user)
-        db.session.commit()
-    elif not user.check_password(password):
-        # Keep demo login working if hash was rotated to demo password expectation
-        if password == demo_password:
-            user.set_password(demo_password)
-            db.session.commit()
-        else:
-            write_audit("login_failed", user_id=user.id, details={"reason": "bad_password"})
-            return None, "Incorrect password. Use 123456789 for demo access."
-
-    write_audit("login_success", user_id=user.id, details={"email": email, "method": "password"})
-    return user, ""
-
-
 def get_or_create_sso_user(
     email: str,
     first_name: str = "",
