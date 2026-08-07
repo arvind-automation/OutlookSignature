@@ -66,7 +66,7 @@ ORGANIZATION_SEEDS = [
         "website": "www.anupengineering.com",
         "logo_path": "assets/anup-engineering-logo.png",
         "banner_path": None,
-        "watermark_path": "assets/watermark-a.svg",
+        "watermark_path": "assets/watermark-a.png",
         "logo_bg": "#ffffff",
         "logo_width": 230,
     },
@@ -77,7 +77,7 @@ ORGANIZATION_SEEDS = [
         "website": "www.arvindsmartspaces.com",
         "logo_path": "assets/arvind-smartspaces-logo.png",
         "banner_path": None,
-        "watermark_path": "assets/watermark-a.svg",
+        "watermark_path": "assets/watermark-a.png",
         "logo_bg": "#ffffff",
         "logo_width": 230,
     },
@@ -88,7 +88,7 @@ ORGANIZATION_SEEDS = [
         "website": "www.arvindfashions.com",
         "logo_path": "assets/arvind-fashions-logo.png",
         "banner_path": None,
-        "watermark_path": "assets/watermark-a.svg",
+        "watermark_path": "assets/watermark-a.png",
         "logo_bg": "#ffffff",
         "logo_width": 230,
     },
@@ -99,7 +99,7 @@ ORGANIZATION_SEEDS = [
         "website": "www.arvind.com",
         "logo_path": "assets/arvind-company-logo.png",
         "banner_path": "assets/arvind-95-banner.png",
-        "watermark_path": "assets/watermark-a.svg",
+        "watermark_path": "assets/watermark-a.png",
         "logo_bg": "#ffffff",
         "logo_width": 230,
     },
@@ -110,9 +110,9 @@ ORGANIZATION_SEEDS = [
         "website": "www.arvind.com",
         "logo_path": "assets/arvind-gcc-logo.png",
         "banner_path": None,
-        "watermark_path": "assets/watermark-a.svg",
+        "watermark_path": "assets/watermark-a.png",
         "logo_bg": "#ffffff",
-        "logo_width": 230,
+        "logo_width": 260,
     },
 ]
 
@@ -278,7 +278,7 @@ def manager_block(values: dict, *, compact: bool = False) -> str:
 
     l1 = (
         _one_manager_block(
-            heading="Reporting to",
+            heading="Level 1 Manager",
             full_name=values.get("managerFullName") or "",
             designation=values.get("managerDesignation") or "",
             phone=values.get("managerPhone") or "",
@@ -355,7 +355,7 @@ def build_standard_template(values: dict, assets: dict, *, team: str = "") -> st
         f'<td style="width:330px;vertical-align:top;padding:18px 16px 14px 18px;'
         f'background-color:#ffffff;background-image:url({assets["watermark"]});'
         "background-repeat:no-repeat;background-position:right 8px top 8px;"
-        'background-size:150px auto;">'
+        'background-size:140px auto;">'
         f"{body_content(values, team=team)}"
         "</td>"
         f"{logo_cell(assets)}"
@@ -376,7 +376,7 @@ def build_compact_template(values: dict, assets: dict, *, team: str = "") -> str
         f'<td style="width:320px;vertical-align:top;padding:16px 14px;'
         f'background-color:#ffffff;background-image:url({assets["watermark"]});'
         "background-repeat:no-repeat;background-position:right 6px top 6px;"
-        'background-size:130px auto;">'
+        'background-size:120px auto;">'
         f"{body_content(values, compact=True, team=team)}"
         "</td>"
         f'{logo_cell(assets, "240px")}'
@@ -469,7 +469,7 @@ def assets_from_org(org, *, for_email: bool = False) -> dict:
     """Build asset URL dict from Organization model or dict-like."""
     if org is None:
         logo = "assets/arvind-company-logo.png"
-        watermark = "assets/watermark-a.svg"
+        watermark = "assets/watermark-a.png"
         banner = None
         logo_bg = BRAND["maroon"]
         logo_width = 230
