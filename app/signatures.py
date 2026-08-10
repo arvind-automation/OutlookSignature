@@ -353,9 +353,7 @@ def build_standard_template(values: dict, assets: dict, *, team: str = "") -> st
         f'font-family:Arial,Helvetica,sans-serif;color:{BRAND["muted"]};">'
         "<tr>"
         f'<td style="width:330px;vertical-align:top;padding:18px 16px 14px 18px;'
-        f'background-color:#ffffff;background-image:url({assets["watermark"]});'
-        "background-repeat:no-repeat;background-position:right 8px top 8px;"
-        'background-size:140px auto;">'
+        f'background-color:#ffffff;">'
         f"{body_content(values, team=team)}"
         "</td>"
         f"{logo_cell(assets)}"
@@ -374,9 +372,7 @@ def build_compact_template(values: dict, assets: dict, *, team: str = "") -> str
         f'font-family:Arial,Helvetica,sans-serif;color:{BRAND["muted"]};">'
         "<tr>"
         f'<td style="width:320px;vertical-align:top;padding:16px 14px;'
-        f'background-color:#ffffff;background-image:url({assets["watermark"]});'
-        "background-repeat:no-repeat;background-position:right 6px top 6px;"
-        'background-size:120px auto;">'
+        f'background-color:#ffffff;">'
         f"{body_content(values, compact=True, team=team)}"
         "</td>"
         f'{logo_cell(assets, "240px")}'
