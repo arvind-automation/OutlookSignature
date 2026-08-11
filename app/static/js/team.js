@@ -1,16 +1,20 @@
 (function () {
   "use strict";
 
+  // Note: the backend's clean_text() strips recognized placeholder tokens
+  // (e.g. "FirstName", "Designation", "name@arvind.in") back to empty, so
+  // these sample values are deliberately phrased to survive that filter and
+  // still render as an example signature in the hover preview.
   var BASE_FORM = {
     company: "arvind-limited",
-    firstName: "FirstName",
-    lastName: "LastName",
-    email: "name@arvind.in",
-    designation: "Designation",
-    phone: "+91 XXXXX XXXXX",
+    firstName: "First Name",
+    lastName: "Last Name",
+    email: "yourname@arvind.in",
+    designation: "Your Job Title",
+    phone: "+91 98765 43210",
     organization: "Arvind Limited",
     website: "www.arvind.com",
-    address: "",
+    address: "Your Office Address",
     managerFirstName: "",
     managerLastName: "",
     managerDesignation: "",
@@ -24,11 +28,11 @@
   };
 
   var MANAGER_DEFAULTS = {
-    managerFirstName: "ManagerFirstName",
-    managerLastName: "ManagerLastName",
-    managerDesignation: "Designation",
+    managerFirstName: "Manager First Name",
+    managerLastName: "Manager Last Name",
+    managerDesignation: "Manager Job Title",
     managerEmail: "manager@arvind.in",
-    managerPhone: "+91 XXXXX XXXXX",
+    managerPhone: "+91 98765 43210",
   };
 
   var cache = {};
