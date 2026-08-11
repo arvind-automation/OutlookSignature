@@ -40,7 +40,9 @@ def preview():
     if template_id not in current_app.config["ALLOWED_TEMPLATES"]:
         template_id = "standard"
     for_email = bool(payload.get("forEmail"))
-    team = (payload.get("team") or _session_team(user) or "").strip().lower()
+    # Template hierarchy is determined by the authenticated session, never by
+    # client state supplied with the preview request.
+    team = _session_team(user)
 
     company = (form.get("company") or "").strip()
     org = Organization.query.filter_by(slug=company).first() if company else None
@@ -59,7 +61,30 @@ def preview():
 
     assets = assets_from_org(org, for_email=for_email)
     html = build_signature_html(template_id, form, assets, team=team)
-    return jsonify({"html": html, "needsOrganization": False})
+    copy_error = ""
+    if for_email and template_id != "minimal" and not assets.get("logo"):
+        copy_error = (
+            "Rich copy requires a public HTTPS asset origin. Ask an administrator "
+            "to configure PUBLIC_ASSET_BASE_URL."
+        )
+    if (
+        for_email
+        and template_id == "standard"
+        and org.banner_path
+        and not assets.get("banner")
+    ):
+        copy_error = (
+            "Rich copy requires a public HTTPS asset origin for the campaign banner. "
+            "Ask an administrator to configure PUBLIC_ASSET_BASE_URL."
+        )
+    return jsonify(
+        {
+            "html": html,
+            "needsOrganization": False,
+            "copyReady": not bool(copy_error),
+            "copyError": copy_error,
+        }
+    )
 
 
 @api_bp.get("/signature")
@@ -110,8 +135,9 @@ def save_signature():
     saved.email = (form.get("email") or user.email or "")[:255]
     saved.designation = (form.get("designation") or "")[:255]
     saved.phone = (form.get("phone") or "")[:64]
-    saved.organization_name = (form.get("organization") or "")[:255]
-    saved.website = (form.get("website") or "")[:255]
+    # Organization identity and website are backend-controlled.
+    saved.organization_name = (org.organization if org else "")[:255]
+    saved.website = (org.website if org else "")[:255]
     saved.address = form.get("address") or ""
     saved.manager_first_name = (form.get("managerFirstName") or "")[:120]
     saved.manager_last_name = (form.get("managerLastName") or "")[:120]

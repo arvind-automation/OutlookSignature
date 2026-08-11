@@ -10,13 +10,13 @@
   />
   <img
     class="auth-logo-fade"
-    src="{{ url_for('static', filename='assets/arvind-gcc-logo.png') }}"
+    src="{{ url_for('static', filename='assets/arvind-gcc-logo-transparent.png') }}"
     alt=""
     aria-hidden="true"
   />
   <a class="auth-logo-corner" href="{{ url_for('auth.team') }}">
     <img
-      src="{{ url_for('static', filename='assets/arvind-gcc-logo.png') }}"
+      src="{{ url_for('static', filename='assets/arvind-gcc-logo-transparent.png') }}"
       alt="Arvind GCC"
     />
   </a>
@@ -35,7 +35,7 @@
         <form method="post" action="{{ url_for('auth.team') }}">
           <input type="hidden" name="team" value="gcc" />
           <button type="submit" class="team-card" data-team="gcc">
-            <span class="team-card__icon">ST</span>
+            <span class="team-card__icon">01</span>
             <span class="team-card__title">{{ team_labels.gcc }}</span>
             <span class="team-card__desc">Includes your professional profile details.</span>
           </button>
@@ -44,7 +44,7 @@
         <form method="post" action="{{ url_for('auth.team') }}">
           <input type="hidden" name="team" value="sales" />
           <button type="submit" class="team-card" data-team="sales">
-            <span class="team-card__icon">HT</span>
+            <span class="team-card__icon">02</span>
             <span class="team-card__title">{{ team_labels.sales }}</span>
             <span class="team-card__desc">Includes your professional profile details and reporting hierarchy.</span>
           </button>

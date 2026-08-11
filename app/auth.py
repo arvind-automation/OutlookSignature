@@ -94,6 +94,29 @@ def get_or_create_sso_user(
     return user, ""
 
 
+def get_or_create_local_user(email: str) -> User:
+    """Provision the fixed development user used by the local-login route."""
+    email = (email or "local.user@arvind.in").strip().lower()
+    user = User.query.filter_by(email=email).first()
+    if user is None:
+        first_name, last_name = names_from_email(email)
+        user = User(
+            email=email,
+            first_name=first_name or "Local",
+            last_name=last_name or "User",
+        )
+        user.set_password(secrets.token_urlsafe(32))
+        db.session.add(user)
+        db.session.commit()
+
+    write_audit(
+        "login_success",
+        user_id=user.id,
+        details={"email": email, "method": "local_development"},
+    )
+    return user
+
+
 def login_user_session(user: User) -> None:
     session.clear()
     session["user_id"] = user.id

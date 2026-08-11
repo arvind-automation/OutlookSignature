@@ -10,23 +10,40 @@
   />
   <img
     class="auth-logo-fade"
-    src="{{ url_for('static', filename='assets/arvind-gcc-logo.png') }}"
+    src="{{ url_for('static', filename='assets/arvind-gcc-logo-transparent.png') }}"
     alt=""
     aria-hidden="true"
   />
   <a class="auth-logo-corner" href="{{ url_for('auth.login') }}">
     <img
-      src="{{ url_for('static', filename='assets/arvind-gcc-logo.png') }}"
+      src="{{ url_for('static', filename='assets/arvind-gcc-logo-transparent.png') }}"
       alt="Arvind GCC"
     />
   </a>
 
+  <section class="auth-story" aria-label="Arvind email identity">
+    <span class="auth-story__index">ARVIND GCC &nbsp;·&nbsp; DIGITAL WORKPLACE</span>
+    <p>
+      Build a precise, on-brand signature that carries our identity consistently
+      across every conversation.
+    </p>
+    <div class="auth-story__signals" aria-label="Workspace benefits">
+      <span><strong>01</strong> Brand aligned</span>
+      <span><strong>02</strong> Ready to paste</span>
+      <span><strong>03</strong> Built for every team</span>
+    </div>
+  </section>
+
   <div class="auth-card">
     <div class="auth-brand auth-brand--center">
       <div>
-        <p class="auth-eyebrow">Welcome back</p>
+        <p class="auth-eyebrow">Your identity workspace</p>
         <h1>Signature Generator</h1>
+        {% if microsoft_sso_enabled %}
         <p>Sign in with your Arvind Microsoft account to continue</p>
+        {% else %}
+        <p>Continue with the local development account</p>
+        {% endif %}
       </div>
     </div>
 
@@ -48,11 +65,12 @@
       </svg>
       <span>Sign in with Microsoft</span>
     </a>
+    {% elif local_dev_login_enabled %}
+    <form method="post" action="{{ url_for('auth.local_login') }}">
+      <button type="submit" class="btn btn-primary btn-block">Continue Locally</button>
+    </form>
     {% else %}
-    <p class="auth-error" aria-live="polite">
-      Microsoft sign-in is not configured. Set Azure credentials and enable
-      <strong>MICROSOFT_SSO_ENABLED</strong> in the environment.
-    </p>
+    <p class="auth-error" aria-live="polite">No sign-in method is enabled.</p>
     {% endif %}
   </div>
 </div>

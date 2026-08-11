@@ -1,7 +1,8 @@
-from flask import Blueprint, current_app, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, session, url_for
 
 from app.auth import (
     current_user,
+    get_or_create_local_user,
     get_or_create_sso_user,
     is_admin,
     login_user_session,
@@ -44,7 +45,20 @@ def login():
     return render_template(
         "login.html",
         microsoft_sso_enabled=microsoft_sso_enabled(),
+        local_dev_login_enabled=current_app.config["LOCAL_DEV_LOGIN_ENABLED"],
     )
+
+
+@auth_bp.post("/auth/local")
+def local_login():
+    if not current_app.config["LOCAL_DEV_LOGIN_ENABLED"] or microsoft_sso_enabled():
+        abort(404)
+
+    user = current_user()
+    if not user:
+        user = get_or_create_local_user(current_app.config["LOCAL_DEV_EMAIL"])
+        login_user_session(user)
+    return redirect(url_for("auth.team"))
 
 
 @auth_bp.route("/auth/microsoft")

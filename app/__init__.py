@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 from app.config import Config
 from app.extensions import db, migrate
@@ -30,5 +30,13 @@ def create_app(config_object=Config):
     @app.get("/health")
     def health():
         return jsonify({"status": "ok"})
+
+    @app.after_request
+    def prevent_stale_page_cache(response):
+        if not request.path.startswith("/static/"):
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+        return response
 
     return app

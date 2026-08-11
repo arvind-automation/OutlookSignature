@@ -5,7 +5,7 @@
   <header class="app-header">
     <img
       class="brand-logo brand-logo--header"
-      src="{{ url_for('static', filename='assets/arvind-gcc-logo.png') }}"
+      src="{{ url_for('static', filename='assets/arvind-gcc-logo-transparent.png') }}"
       alt="Arvind GCC"
     />
     <div class="app-header__content">
@@ -215,6 +215,5 @@
 {% endfor %}
 ]
 </script>
-<script src="{{ url_for('static', filename='js/html2canvas.min.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/generator.js') }}" defer></script>
 {% endblock %}

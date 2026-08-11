@@ -18,11 +18,11 @@
 
   var DEFAULT_FORM = {
     company: "arvind-limited",
-    firstName: "FirstName",
-    lastName: "LastName",
-    email: "name@arvind.in",
-    designation: "Designation",
-    phone: "+91 XXXXX XXXXX",
+    firstName: "",
+    lastName: "",
+    email: "",
+    designation: "",
+    phone: "",
     organization: "Arvind Limited",
     website: "www.arvind.com",
     address: "",
@@ -37,8 +37,6 @@
     manager2Email: "",
     manager2Phone: "",
   };
-
-  var FIXED_WEBSITE = "www.arvind.com";
 
   var PREFILL_KEYS = [
     "firstName",
@@ -162,7 +160,6 @@
     Object.keys(fields).forEach(function (key) {
       values[key] = fields[key] ? fields[key].value : "";
     });
-    values.website = FIXED_WEBSITE;
     if (state.team !== "sales" || state.managerLevel < 1) {
       MANAGER_L1_KEYS.forEach(function (k) {
         values[k] = "";
@@ -182,7 +179,6 @@
         fields[key].value = values[key];
       }
     });
-    if (fields.website) fields.website.value = FIXED_WEBSITE;
   }
 
   function lockReadOnlyFields() {
@@ -191,7 +187,6 @@
       fields[key].disabled = true;
       if (key === "website") {
         fields[key].readOnly = true;
-        fields[key].value = FIXED_WEBSITE;
       }
     });
     if (fields.company) fields.company.disabled = false;
@@ -328,7 +323,7 @@
     var org = state.orgsBySlug[slug];
     if (org) {
       fields.organization.value = org.organization;
-      fields.website.value = FIXED_WEBSITE;
+      fields.website.value = org.website || "";
     }
     lockReadOnlyFields();
     renderPreview();
@@ -356,100 +351,87 @@
     }).catch(function () {});
   }
 
-  function waitForImages(root) {
-    var images = Array.prototype.slice.call(root.querySelectorAll("img"));
-    if (!images.length) return Promise.resolve();
-    return Promise.all(
-      images.map(function (img) {
-        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
-        return new Promise(function (resolve) {
-          var done = function () {
-            resolve();
-          };
-          img.addEventListener("load", done, { once: true });
-          img.addEventListener("error", done, { once: true });
-        });
-      })
-    );
-  }
-
-  function downloadPngBlob(blob, filename) {
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url;
-    a.download = filename || "signature.png";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  function copyPngBlob(blob) {
-    if (navigator.clipboard && window.ClipboardItem) {
-      return navigator.clipboard
-        .write([new ClipboardItem({ "image/png": blob })])
-        .then(function () {
-          return true;
-        })
-        .catch(function () {
-          return false;
-        });
+  function copyRenderedSelection(signature) {
+    var selection = window.getSelection ? window.getSelection() : null;
+    if (!selection || !document.createRange) return false;
+    var previousRanges = [];
+    for (var index = 0; index < selection.rangeCount; index += 1) {
+      previousRanges.push(selection.getRangeAt(index).cloneRange());
     }
-    return Promise.resolve(false);
+    var range = document.createRange();
+    range.selectNode(signature);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    var copied = false;
+    try {
+      copied = document.execCommand("copy");
+    } finally {
+      selection.removeAllRanges();
+      previousRanges.forEach(function (previousRange) {
+        selection.addRange(previousRange);
+      });
+    }
+    return copied;
+  }
+
+  function writeRichClipboard(signature) {
+    if (!signature) {
+      return Promise.reject(new Error("Signature preview not found"));
+    }
+    var html = signature.outerHTML;
+    var plainText = (signature.innerText || signature.textContent || "").trim();
+    if (!plainText) {
+      return Promise.reject(new Error("Signature preview is empty"));
+    }
+    if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+      var item = new window.ClipboardItem({
+        "text/html": new Blob([html], { type: "text/html" }),
+        "text/plain": new Blob([plainText], { type: "text/plain" }),
+      });
+      return navigator.clipboard.write([item]).then(function () {
+        return "clipboard-api";
+      });
+    }
+    if (copyRenderedSelection(signature)) {
+      return Promise.resolve("rendered-selection");
+    }
+    return Promise.reject(new Error("Rich clipboard access is unavailable"));
   }
 
   function copyRenderedSignature() {
-    if (typeof html2canvas !== "function") {
-      showStatus("Image copy is unavailable. Try Copy HTML Code instead.", true);
-      return;
-    }
-
-    showStatus("Creating signature image…");
+    showStatus("Preparing signature…");
     fetchPreview(true)
       .then(function (data) {
         if (data.needsOrganization) {
-          showStatus("Select an organization first.", true);
-          return null;
+          throw new Error("Select an organization first.");
+        }
+        if (data.copyReady === false) {
+          throw new Error(data.copyError || "Signature assets are not ready for rich copy.");
         }
         els.preview.innerHTML = data.html || "";
-        return waitForImages(els.preview).then(function () {
-          return html2canvas(els.preview, {
-            backgroundColor: "#ffffff",
-            scale: 2,
-            useCORS: true,
-            logging: false,
-          });
-        });
-      })
-      .then(function (canvas) {
-        if (!canvas) return;
-        return new Promise(function (resolve, reject) {
-          canvas.toBlob(function (blob) {
-            if (!blob) {
-              reject(new Error("Could not create PNG"));
-              return;
-            }
-            resolve(blob);
-          }, "image/png");
-        });
-      })
-      .then(function (blob) {
-        if (!blob) return;
-        return copyPngBlob(blob).then(function (ok) {
-          if (ok) {
-            showStatus("Signature image copied. Paste it into Outlook, Gmail, or Zoho Mail.");
-          } else {
-            downloadPngBlob(blob, "signature.png");
-            showStatus(
-              "Clipboard image copy blocked. Downloaded signature.png instead — insert that image into your email."
-            );
+        var signature = els.preview.firstElementChild;
+        return writeRichClipboard(signature).catch(function (clipboardError) {
+          if (signature && copyRenderedSelection(signature)) {
+            return "rendered-selection";
           }
-          audit("signature_copied");
+          throw clipboardError;
         });
+      })
+      .then(function (copyMethod) {
+        showStatus(
+          "Signature copied. In Outlook on the web, open Settings → Accounts → Signatures and paste it into the signature editor."
+        );
+        audit("signature_copied", { method: copyMethod });
       })
       .catch(function (err) {
         console.error(err);
-        showStatus("Copy failed. Try Copy HTML Code instead.", true);
+        var message =
+          err &&
+          (err.message === "Select an organization first." ||
+            err.message.indexOf("PUBLIC_ASSET_BASE_URL") !== -1)
+            ? err.message
+            : "Rich copy was blocked. Select the rendered signature and press Ctrl+C, then paste it into Outlook.";
+        showStatus(message, true);
       });
   }
 
@@ -481,7 +463,8 @@
     var values = baseFormDefaults();
     values.company = DEFAULT_FORM.company;
     values.organization = DEFAULT_FORM.organization;
-    values.website = FIXED_WEBSITE;
+    values.website =
+      (state.orgsBySlug[DEFAULT_FORM.company] || {}).website || DEFAULT_FORM.website;
     MANAGER_L2_KEYS.forEach(function (k) {
       values[k] = "";
     });
