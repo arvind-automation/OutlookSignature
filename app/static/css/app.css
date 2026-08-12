@@ -834,7 +834,11 @@ h2,
   }
 
   #generator-view .template-section {
-    flex-shrink: 0;
+    flex: 0 0 230px;
+    max-height: 230px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
   }
 }
 
