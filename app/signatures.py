@@ -678,12 +678,12 @@ def build_logo_sidebar_template(values: dict, assets: dict, *, team: str = "") -
     header = ""
     if values["fullName"]:
         header += (
-            f'<tr><td colspan="2" style="padding:0;font-size:17px;line-height:21px;'
+            f'<tr><td colspan="2" style="padding:0 0 0 10px;font-size:17px;line-height:21px;'
             f'font-weight:700;color:{BRAND["charcoal"]};">{escape_html(values["fullName"])}</td></tr>'
         )
     if values["designation"]:
         header += (
-            f'<tr><td colspan="2" style="padding:1px 0 8px;border-bottom:1px dotted {BRAND["line"]};'
+            f'<tr><td colspan="2" style="padding:1px 0 8px 10px;border-bottom:1px dotted {BRAND["line"]};'
             f'font-size:14px;line-height:19px;color:{BRAND["maroon"]};">'
             f'{escape_html(values["designation"])}</td></tr>'
         )

@@ -830,7 +830,7 @@ h2,
   #generator-view .preview-view {
     flex: 1;
     min-height: 0;
-    overflow: auto;
+    overflow: hidden;
   }
 
   #generator-view .template-section {
