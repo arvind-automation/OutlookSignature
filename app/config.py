@@ -34,7 +34,16 @@ class Config:
         "sales": "Hierarchy Template",
     }
     ALLOWED_TEAMS = frozenset(TEAM_LABELS.keys())
-    ALLOWED_TEMPLATES = frozenset({"standard", "compact", "minimal"})
+    ALLOWED_TEMPLATES = frozenset(
+        {
+            "standard",
+            "compact",
+            "minimal",
+            "logo-header",
+            "logo-sidebar",
+            "logo-profile",
+        }
+    )
     APP_BASE_URL = (os.getenv("APP_BASE_URL") or "http://localhost:5000").rstrip("/")
     # Public HTTPS origin that serves this application's /static assets.
     # Local/data URLs are deliberately excluded from copied signatures.

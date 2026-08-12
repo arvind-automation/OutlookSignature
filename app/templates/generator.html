@@ -190,6 +190,12 @@
             class="template-card{% if template.id == 'standard' %} is-active{% endif %}"
             data-template="{{ template.id }}"
           >
+            <span class="template-card__thumb template-card__thumb--{{ template.id }}" aria-hidden="true">
+              <span class="template-card__mock-logo"></span>
+              <span class="template-card__mock-copy">
+                <i></i><i></i><i></i>
+              </span>
+            </span>
             <span class="template-card__name">{{ template.name }}</span>
             <span class="template-card__desc">{{ template.description }}</span>
           </button>

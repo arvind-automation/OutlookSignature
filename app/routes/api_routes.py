@@ -19,25 +19,6 @@ def _session_team(user) -> str:
     return (session.get("team") or getattr(user, "team", None) or "").strip().lower()
 
 
-def _preview_team(user, payload) -> str:
-    """Team used to render a signature preview.
-
-    login_user_session() resets session["team"] to "" on every login, even
-    though the user's `team` column still holds their last choice — that is
-    what makes /team show up again after each login. So a non-empty
-    session["team"] is the real signal that a team has been committed for
-    this session (set on /team, or the moment /generator loads); once that
-    happens client input is ignored so a signature can't be rendered under a
-    template the user hasn't actually chosen. Before that (e.g. hovering the
-    template cards on the team-selection page), there is nothing to protect
-    yet, so the client may specify which template to preview.
-    """
-    if (session.get("team") or "").strip():
-        return _session_team(user)
-    requested = (payload.get("team") or "").strip().lower()
-    return requested if requested in current_app.config["ALLOWED_TEAMS"] else _session_team(user)
-
-
 @api_bp.get("/organizations")
 def list_organizations():
     user, err = _require_api_user()
@@ -59,7 +40,9 @@ def preview():
     if template_id not in current_app.config["ALLOWED_TEMPLATES"]:
         template_id = "standard"
     for_email = bool(payload.get("forEmail"))
-    team = _preview_team(user, payload)
+    # Template hierarchy is determined by the authenticated session, never by
+    # client state supplied with the preview request.
+    team = _session_team(user)
 
     company = (form.get("company") or "").strip()
     org = Organization.query.filter_by(slug=company).first() if company else None

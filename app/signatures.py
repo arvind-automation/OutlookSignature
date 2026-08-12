@@ -35,6 +35,21 @@ TEMPLATES = [
         "name": "Minimal",
         "description": "Text-only signature for lightweight clients",
     },
+    {
+        "id": "logo-header",
+        "name": "Logo Header",
+        "description": "Prominent company logo with compact contact details",
+    },
+    {
+        "id": "logo-sidebar",
+        "name": "Logo Sidebar",
+        "description": "Profile heading with logo, contacts and social links",
+    },
+    {
+        "id": "logo-profile",
+        "name": "Logo Profile",
+        "description": "Circular company mark with a strong address footer",
+    },
 ]
 
 DEFAULT_FORM = {
@@ -229,6 +244,18 @@ def normalize_tel(value) -> str:
     return normalized
 
 
+def format_indian_phone(value) -> str:
+    """Return a display phone number with one Indian country-code prefix."""
+    phone = clean_text(value)
+    if not phone:
+        return ""
+    if re.match(r"^\+91(?:\s|$)", phone):
+        return "+91 " + re.sub(r"^\+91\s*", "", phone).strip()
+    if phone.startswith("+91"):
+        return "+91 " + phone[3:].strip()
+    return f"+91 {phone}"
+
+
 def normalize_https_url(value, *, add_scheme: bool = False) -> str:
     candidate = clean_text(value)
     if not candidate:
@@ -265,8 +292,8 @@ def normalize_form_values(
     return {
         "fullName": " ".join(part for part in (first_name, last_name) if part),
         "designation": clean_text(raw.get("designation")),
-        "phone": clean_text(raw.get("phone")),
-        "phoneHref": normalize_tel(raw.get("phone")),
+        "phone": format_indian_phone(raw.get("phone")),
+        "phoneHref": normalize_tel(format_indian_phone(raw.get("phone"))),
         "email": employee_email,
         "emailHref": employee_email,
         "organization": clean_text(organization),
@@ -283,16 +310,16 @@ def normalize_form_values(
         "managerDesignation": clean_text(raw.get("managerDesignation")),
         "managerEmail": manager_email,
         "managerEmailHref": manager_email,
-        "managerPhone": clean_text(raw.get("managerPhone")),
-        "managerPhoneHref": normalize_tel(raw.get("managerPhone")),
+        "managerPhone": format_indian_phone(raw.get("managerPhone")),
+        "managerPhoneHref": normalize_tel(format_indian_phone(raw.get("managerPhone"))),
         "manager2FullName": " ".join(
             part for part in (manager2_first, manager2_last) if part
         ),
         "manager2Designation": clean_text(raw.get("manager2Designation")),
         "manager2Email": manager2_email,
         "manager2EmailHref": manager2_email,
-        "manager2Phone": clean_text(raw.get("manager2Phone")),
-        "manager2PhoneHref": normalize_tel(raw.get("manager2Phone")),
+        "manager2Phone": format_indian_phone(raw.get("manager2Phone")),
+        "manager2PhoneHref": normalize_tel(format_indian_phone(raw.get("manager2Phone"))),
     }
 
 
@@ -550,8 +577,199 @@ def build_minimal_template(values: dict, *, team: str = "") -> str:
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
         'width="420" style="width:420px;max-width:420px;border-collapse:collapse;'
         f'font-family:Arial,Helvetica,sans-serif;color:{BRAND["muted"]};">'
-        f'<tr><td style="padding:8px 0;">{contact_block(values, team=team)}</td></tr>'
+        f'<tr><td style="padding:8px 0 8px 34px;">{contact_block(values, team=team)}</td></tr>'
         "</table>"
+    )
+
+
+def _logo_markup(assets: dict, *, width: int = 190) -> str:
+    logo = _safe_asset_url(assets.get("logo"))
+    if not logo:
+        return ""
+    source_width = max(40, int(assets.get("logoWidth") or width))
+    source_height = max(1, int(assets.get("logoHeight") or round(source_width / 3)))
+    display_width = max(40, min(width, source_width))
+    display_height = max(1, round(display_width * source_height / source_width))
+    image = (
+        f'<img src="{escape_html(logo)}" width="{display_width}" height="{display_height}" '
+        f'alt="{escape_html(assets.get("logoAlt") or "Organization logo")}" '
+        f'style="display:block;border:0;outline:none;text-decoration:none;'
+        f'width:{display_width}px;height:{display_height}px;" />'
+    )
+    href = normalize_https_url(assets.get("logoHref"))
+    if href:
+        return f'<a href="{escape_html(href)}" style="text-decoration:none;border:0;">{image}</a>'
+    return image
+
+
+def _linked_text(label: str, href: str = "", *, color: str | None = None) -> str:
+    safe_label = escape_html(label)
+    if not href:
+        return safe_label
+    return (
+        f'<a href="{escape_html(href)}" style="color:{color or BRAND["charcoal"]};'
+        f'text-decoration:none;">{safe_label}</a>'
+    )
+
+
+def _new_template_managers(values: dict, team: str) -> str:
+    return manager_block(values) if (team or "").lower() == "sales" else ""
+
+
+def build_logo_header_template(values: dict, assets: dict, *, team: str = "") -> str:
+    logo = _logo_markup(assets, width=220)
+    name = escape_html(values["fullName"])
+    designation = escape_html(values["designation"])
+    identity_parts = []
+    if name:
+        identity_parts.append(f'<strong style="color:{BRAND["charcoal"]};">{name}</strong>')
+    if designation:
+        identity_parts.append(designation)
+    identity = "&nbsp; | &nbsp;".join(identity_parts)
+
+    contacts = []
+    if values["phone"]:
+        contacts.append(
+            "Mobile: "
+            + _linked_text(
+                values["phone"],
+                f'tel:{values["phoneHref"]}' if values["phoneHref"] else "",
+            )
+        )
+    if values["email"]:
+        contacts.append(
+            "Email: "
+            + _linked_text(
+                values["email"],
+                f'mailto:{values["emailHref"]}' if values["emailHref"] else "",
+            )
+        )
+    contact_line = "&nbsp; | &nbsp;".join(contacts)
+
+    detail_rows = ""
+    for content in (identity, contact_line, escape_html(values["address"])):
+        if content:
+            detail_rows += (
+                f'<tr><td colspan="2" style="padding:0 0 3px 34px;font-size:12px;line-height:17px;'
+                f'color:{BRAND["muted"]};">{content}</td></tr>'
+            )
+    if values["websiteLabel"]:
+        detail_rows += (
+            f'<tr><td colspan="2" style="padding:0 0 0 34px;font-size:12px;line-height:17px;'
+            f'color:{BRAND["muted"]};">Web: '
+            f'{_linked_text(values["websiteLabel"], values["websiteHref"], color=BRAND["maroon"])}</td></tr>'
+        )
+    logo_row = (
+        f'<tr><td colspan="2" style="padding:18px 0 14px 34px;vertical-align:middle;">{logo}</td></tr>'
+        if logo
+        else ""
+    )
+    return (
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" '
+        f'style="width:600px;max-width:600px;border-collapse:collapse;background:#ffffff;'
+        f'font-family:Arial,Helvetica,sans-serif;color:{BRAND["muted"]};">'
+        f'{logo_row}{detail_rows}{social_row(assets.get("socials") or [])}'
+        f'{_new_template_managers(values, team)}</table>'
+    )
+
+
+def build_logo_sidebar_template(values: dict, assets: dict, *, team: str = "") -> str:
+    logo = _logo_markup(assets, width=135)
+    header = ""
+    if values["fullName"]:
+        header += (
+            f'<tr><td colspan="2" style="padding:0;font-size:17px;line-height:21px;'
+            f'font-weight:700;color:{BRAND["charcoal"]};">{escape_html(values["fullName"])}</td></tr>'
+        )
+    if values["designation"]:
+        header += (
+            f'<tr><td colspan="2" style="padding:1px 0 8px;border-bottom:1px dotted {BRAND["line"]};'
+            f'font-size:14px;line-height:19px;color:{BRAND["maroon"]};">'
+            f'{escape_html(values["designation"])}</td></tr>'
+        )
+    rows = ""
+    contact_values = (
+        ("T", values["phone"], f'tel:{values["phoneHref"]}' if values["phoneHref"] else ""),
+        ("E", values["email"], f'mailto:{values["emailHref"]}' if values["emailHref"] else ""),
+        ("W", values["websiteLabel"], values["websiteHref"]),
+        ("A", values["address"], ""),
+    )
+    for label, value, href in contact_values:
+        if value:
+            rows += (
+                f'<tr><td style="padding:0 5px 2px 0;font-size:11px;font-weight:700;'
+                f'color:{BRAND["maroon"]};vertical-align:top;">{label}:</td>'
+                f'<td style="padding:0 0 2px;font-size:12px;line-height:16px;color:{BRAND["charcoal"]};">'
+                f'{_linked_text(value, href)}</td></tr>'
+            )
+    logo_cell_html = (
+        f'<td width="170" style="width:170px;padding:14px 20px 12px 20px;vertical-align:middle;">{logo}</td>'
+        if logo
+        else ""
+    )
+    detail_width = 430 if logo else 600
+    return (
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" '
+        f'style="width:600px;max-width:600px;border-collapse:collapse;background:#ffffff;'
+        f'font-family:Arial,Helvetica,sans-serif;color:{BRAND["muted"]};">'
+        f'{header}<tr>{logo_cell_html}<td width="{detail_width}" style="width:{detail_width}px;'
+        f'padding:14px 0 12px;vertical-align:top;"><table role="presentation" cellpadding="0" '
+        f'cellspacing="0" border="0" style="border-collapse:collapse;">{rows}</table></td></tr>'
+        f'{social_row(assets.get("socials") or [])}{_new_template_managers(values, team)}</table>'
+    )
+
+
+def build_logo_profile_template(values: dict, assets: dict, *, team: str = "") -> str:
+    logo = _logo_markup(assets, width=150)
+    detail_rows = ""
+    if values["fullName"]:
+        detail_rows += (
+            f'<tr><td style="padding:0 0 2px;font-size:22px;line-height:26px;font-weight:700;'
+            f'color:{BRAND["charcoal"]};">{escape_html(values["fullName"])}</td></tr>'
+        )
+    for value in (values["designation"], values["organization"]):
+        if value:
+            detail_rows += (
+                f'<tr><td style="padding:0 0 2px;font-size:15px;line-height:19px;'
+                f'color:{BRAND["maroon"]};">{escape_html(value)}</td></tr>'
+            )
+    contact_rows = ""
+    for symbol, value, href in (
+        ("P", values["phone"], f'tel:{values["phoneHref"]}' if values["phoneHref"] else ""),
+        ("E", values["email"], f'mailto:{values["emailHref"]}' if values["emailHref"] else ""),
+        ("W", values["websiteLabel"], values["websiteHref"]),
+    ):
+        if value:
+            contact_rows += (
+                f'<tr><td width="24" style="width:24px;padding:2px 8px 2px 0;font-size:11px;'
+                f'font-weight:700;color:{BRAND["maroon"]};vertical-align:top;">{symbol}</td>'
+                f'<td style="padding:2px 0;font-size:13px;line-height:18px;color:{BRAND["charcoal"]};">'
+                f'{_linked_text(value, href)}</td></tr>'
+            )
+    logo_panel = (
+        f'<td width="190" style="width:190px;padding:20px;vertical-align:middle;text-align:center;'
+        f'border:2px solid {BRAND["maroon"]};border-radius:100px;">{logo}</td>'
+        if logo
+        else ""
+    )
+    address_row = ""
+    if values["address"]:
+        address_row = (
+            f'<tr><td colspan="2" style="padding:8px 16px;background:{BRAND["charcoal"]};'
+            f'border-bottom:4px solid {BRAND["maroon"]};font-size:13px;line-height:18px;'
+            f'text-align:center;color:#ffffff;">{escape_html(values["address"])}</td></tr>'
+        )
+    return (
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" '
+        f'style="width:600px;max-width:600px;border-collapse:collapse;background:#ffffff;'
+        f'font-family:Arial,Helvetica,sans-serif;color:{BRAND["muted"]};">'
+        f'<tr>{logo_panel}<td style="padding:12px 0 12px 28px;vertical-align:middle;'
+        f'border-left:3px solid {BRAND["maroon"]};"><table role="presentation" cellpadding="0" '
+        f'cellspacing="0" border="0" style="border-collapse:collapse;">{detail_rows}'
+        f'<tr><td style="padding-top:10px;"><table role="presentation" cellpadding="0" cellspacing="0" '
+        f'border="0" style="border-collapse:collapse;">{contact_rows}</table></td></tr></table></td></tr>'
+        f'{address_row}{social_row(assets.get("socials") or [])}'
+        f'{_new_template_managers(values, team)}</table>'
     )
 
 
@@ -583,6 +801,12 @@ def build_signature_html(
         return build_compact_template(values, assets, team=team)
     if template_id == "minimal":
         return build_minimal_template(values, team=team)
+    if template_id == "logo-header":
+        return build_logo_header_template(values, assets, team=team)
+    if template_id == "logo-sidebar":
+        return build_logo_sidebar_template(values, assets, team=team)
+    if template_id == "logo-profile":
+        return build_logo_profile_template(values, assets, team=team)
     return build_standard_template(values, assets, team=team)
 
 

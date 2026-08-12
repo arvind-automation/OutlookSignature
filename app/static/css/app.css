@@ -2189,6 +2189,127 @@ textarea {
   }
 }
 
+/* Six-layout signature chooser previews. */
+.template-card__thumb {
+  position: relative;
+  display: grid;
+  grid-template-columns: 42% 1fr;
+  align-items: center;
+  width: 100%;
+  height: 72px;
+  margin-bottom: 12px;
+  padding: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(113, 85, 94, 0.13);
+  border-radius: 8px;
+  background: #fff;
+  pointer-events: none;
+}
+
+.template-card__mock-logo {
+  display: block;
+  width: 72%;
+  height: 24px;
+  border-radius: 3px;
+  background: linear-gradient(110deg, var(--wine-bright), var(--wine));
+}
+
+.template-card__mock-copy {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+}
+
+.template-card__mock-copy i {
+  display: block;
+  width: 100%;
+  height: 4px;
+  border-radius: 4px;
+  background: #d9d1d3;
+}
+
+.template-card__mock-copy i:nth-child(2) {
+  width: 78%;
+}
+
+.template-card__mock-copy i:nth-child(3) {
+  width: 58%;
+  background: #ead4db;
+}
+
+.template-card__thumb--standard::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: 7px;
+  left: 10px;
+  height: 8px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--wine-bright), #8a6974);
+}
+
+.template-card__thumb--compact {
+  grid-template-columns: 1fr 38%;
+}
+
+.template-card__thumb--minimal {
+  grid-template-columns: 1fr;
+}
+
+.template-card__thumb--minimal .template-card__mock-logo {
+  display: none;
+}
+
+.template-card__thumb--logo-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 9px;
+}
+
+.template-card__thumb--logo-header .template-card__mock-logo {
+  width: 38%;
+  height: 25px;
+}
+
+.template-card__thumb--logo-header .template-card__mock-copy {
+  width: 88%;
+  gap: 4px;
+}
+
+.template-card__thumb--logo-sidebar::before {
+  content: "";
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  left: 10px;
+  border-top: 1px dotted #bbaeb2;
+}
+
+.template-card__thumb--logo-profile {
+  grid-template-columns: 54px 1fr;
+}
+
+.template-card__thumb--logo-profile .template-card__mock-logo {
+  width: 42px;
+  height: 42px;
+  border: 2px solid var(--wine-bright);
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 36%, var(--wine-bright) 39%, var(--wine) 65%);
+}
+
+.template-card__thumb--logo-profile .template-card__mock-copy {
+  padding-left: 10px;
+  border-left: 2px solid var(--wine-bright);
+}
+
+@media (max-width: 1180px) and (min-width: 721px) {
+  .template-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* Vertically align the identity content and login card on one centerline. */
 
 @media (min-width: 601px) {
