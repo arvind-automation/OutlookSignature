@@ -427,18 +427,6 @@ h2,
   word-break: break-all;
 }
 
-.template-section {
-  padding: 20px 24px 24px;
-  flex-shrink: 0;
-  min-width: 0;
-}
-
-.template-section h3 {
-  margin: 0 0 12px;
-  font-size: 0.95rem;
-  color: var(--muted);
-  font-weight: 600;
-}
 
 .template-list {
   display: grid;
@@ -706,49 +694,10 @@ h2,
   transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
-.team-card:hover,
-.team-card.is-previewing {
+.team-card:hover {
   border-color: rgba(139, 21, 56, 0.45);
   background: var(--surface-hover);
   box-shadow: 0 6px 18px rgba(139, 21, 56, 0.12);
-}
-
-.team-preview-popup {
-  position: fixed;
-  z-index: 40;
-  width: min(460px, calc(100vw - 32px));
-  padding: 14px 16px 16px;
-  border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid rgba(139, 21, 56, 0.18);
-  box-shadow:
-    0 4px 12px rgba(31, 26, 23, 0.08),
-    0 22px 48px rgba(31, 26, 23, 0.16);
-  pointer-events: none;
-}
-
-.team-preview-popup__label {
-  margin: 0 0 10px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.team-preview-popup__frame {
-  overflow: hidden;
-  border-radius: 10px;
-  border: 1px solid var(--panel-border);
-  background: #ffffff;
-  height: 220px;
-}
-
-.team-preview-popup__signature {
-  min-width: 0;
-  width: 600px;
-  transform: scale(0.7);
-  transform-origin: top left;
 }
 
 .team-card__icon {
@@ -833,10 +782,9 @@ h2,
     overflow: hidden;
   }
 
-  #generator-view .template-section {
-    flex: 0 0 230px;
-    max-height: 230px;
+  #generator-view .layout-panel {
     overflow-y: auto;
+    max-height: 100%;
     overscroll-behavior: contain;
     scrollbar-gutter: stable;
   }
@@ -1470,18 +1418,6 @@ textarea {
   box-shadow: 0 14px 34px rgba(50, 31, 37, 0.09);
 }
 
-.template-section {
-  padding: 22px 26px 26px;
-}
-
-.template-section h3 {
-  color: #5e5458;
-  font-size: 0.74rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .template-card {
   position: relative;
   padding: 15px 16px 16px;
@@ -1686,8 +1622,7 @@ textarea {
   pointer-events: none;
 }
 
-.team-card:hover,
-.team-card.is-previewing {
+.team-card:hover {
   transform: translateY(-5px);
   border-color: rgba(159, 23, 62, 0.24);
   background: rgba(255, 255, 255, 0.93);
@@ -1717,13 +1652,6 @@ textarea {
   max-width: 240px;
   color: #74696d;
   font-size: 0.74rem;
-}
-
-.team-preview-popup {
-  padding: 16px 18px 18px;
-  border-color: rgba(255, 255, 255, 0.9);
-  border-radius: 20px;
-  box-shadow: 0 28px 70px rgba(50, 31, 37, 0.19);
 }
 
 /* Admin */
@@ -1897,12 +1825,8 @@ textarea {
     padding: 24px 16px 16px;
   }
 
-  .template-section {
+  .layout-panel {
     padding: 20px;
-  }
-
-  .template-list {
-    grid-template-columns: 1fr;
   }
 
   .auth-view {
@@ -3143,8 +3067,7 @@ h4,
     rgba(255, 255, 255, 0.72);
 }
 
-#team-view .team-card:hover,
-#team-view .team-card.is-previewing {
+#team-view .team-card:hover {
   transform: translateY(-7px);
   box-shadow: 0 24px 52px rgba(85, 20, 42, 0.16);
 }
@@ -3203,7 +3126,6 @@ h4,
 }
 
 .field label,
-.template-section h3,
 .admin-stat__label,
 .admin-table th {
   font-family: var(--font-body);
@@ -3319,5 +3241,173 @@ h4,
     width: 100% !important;
     max-width: none !important;
     margin: 0 !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Generator: "Choose Layout" as a third vertical column, always stacked.
+   -------------------------------------------------------------------------- */
+
+.layout-panel {
+  position: relative;
+  min-width: 0;
+  padding: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 8px 24px 24px 24px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px) saturate(1.15);
+}
+
+.layout-panel::before {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 74px;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--wine-bright), var(--sand));
+}
+
+.layout-panel .template-list {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 981px) {
+  #generator-view .app-main {
+    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr) minmax(260px, 320px);
+  }
+}
+
+@media (max-width: 980px) {
+  .layout-panel {
+    padding: 24px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Team page: animated signature-preview thumbnail on each template card.
+   -------------------------------------------------------------------------- */
+
+.team-thumb {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38% 1fr;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 220px;
+  margin: 2px 0 4px;
+  padding: 12px 14px;
+  overflow: hidden;
+  border: 1px solid rgba(113, 85, 94, 0.13);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 8px 18px rgba(50, 31, 37, 0.06);
+}
+
+.team-thumb--hierarchy {
+  row-gap: 8px;
+}
+
+.team-thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 34%,
+    rgba(255, 255, 255, 0.65) 50%,
+    transparent 66%
+  );
+  transform: translateX(-120%);
+  animation: team-thumb-shimmer 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.team-thumb__logo {
+  height: 22px;
+  border-radius: 4px;
+  background: linear-gradient(110deg, var(--wine-bright), var(--wine));
+}
+
+.team-thumb__lines {
+  display: grid;
+  gap: 5px;
+}
+
+.team-thumb__lines i {
+  display: block;
+  height: 4px;
+  border-radius: 4px;
+  background: #d9d1d3;
+  transform-origin: left center;
+  animation: team-thumb-grow 2.8s ease-in-out infinite;
+}
+
+.team-thumb__lines i:nth-child(1) {
+  width: 92%;
+}
+
+.team-thumb__lines i:nth-child(2) {
+  width: 76%;
+  background: #ead4db;
+  animation-delay: 0.15s;
+}
+
+.team-thumb__lines i:nth-child(3) {
+  width: 56%;
+  animation-delay: 0.3s;
+}
+
+.team-thumb__manager {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  grid-column: 1 / -1;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(113, 85, 94, 0.18);
+}
+
+.team-thumb__manager i {
+  display: block;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--wine-bright);
+  opacity: 0.55;
+  animation: team-thumb-grow 2.8s ease-in-out infinite;
+}
+
+.team-thumb__manager i:nth-child(1) {
+  width: 34px;
+}
+
+.team-thumb__manager i:nth-child(2) {
+  width: 20px;
+  background: var(--bronze);
+  animation-delay: 0.15s;
+}
+
+@keyframes team-thumb-shimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  55%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes team-thumb-grow {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scaleX(0.86);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
   }
 }

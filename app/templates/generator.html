@@ -180,29 +180,31 @@
           <div id="signature-preview" class="signature-preview"></div>
         </div>
       </div>
-
-      <div class="template-section">
-        <h3>Choose Layout</h3>
-        <div id="template-list" class="template-list">
-          {% for template in templates %}
-          <button
-            type="button"
-            class="template-card{% if template.id == 'standard' %} is-active{% endif %}"
-            data-template="{{ template.id }}"
-          >
-            <span class="template-card__thumb template-card__thumb--{{ template.id }}" aria-hidden="true">
-              <span class="template-card__mock-logo"></span>
-              <span class="template-card__mock-copy">
-                <i></i><i></i><i></i>
-              </span>
-            </span>
-            <span class="template-card__name">{{ template.name }}</span>
-            <span class="template-card__desc">{{ template.description }}</span>
-          </button>
-          {% endfor %}
-        </div>
-      </div>
     </section>
+
+    <aside class="layout-panel">
+      <div class="panel-heading">
+        <h2>Choose Layout</h2>
+      </div>
+      <div id="template-list" class="template-list">
+        {% for template in templates %}
+        <button
+          type="button"
+          class="template-card{% if template.id == 'standard' %} is-active{% endif %}"
+          data-template="{{ template.id }}"
+        >
+          <span class="template-card__thumb template-card__thumb--{{ template.id }}" aria-hidden="true">
+            <span class="template-card__mock-logo"></span>
+            <span class="template-card__mock-copy">
+              <i></i><i></i><i></i>
+            </span>
+          </span>
+          <span class="template-card__name">{{ template.name }}</span>
+          <span class="template-card__desc">{{ template.description }}</span>
+        </button>
+        {% endfor %}
+      </div>
+    </aside>
   </main>
 </div>
 {% endblock %}

@@ -36,6 +36,12 @@
           <input type="hidden" name="team" value="gcc" />
           <button type="submit" class="team-card" data-team="gcc">
             <span class="team-card__icon">01</span>
+            <span class="team-thumb" aria-hidden="true">
+              <span class="team-thumb__logo"></span>
+              <span class="team-thumb__lines">
+                <i></i><i></i><i></i>
+              </span>
+            </span>
             <span class="team-card__title">{{ team_labels.gcc }}</span>
             <span class="team-card__desc">Includes your professional profile details.</span>
           </button>
@@ -45,6 +51,15 @@
           <input type="hidden" name="team" value="sales" />
           <button type="submit" class="team-card" data-team="sales">
             <span class="team-card__icon">02</span>
+            <span class="team-thumb team-thumb--hierarchy" aria-hidden="true">
+              <span class="team-thumb__logo"></span>
+              <span class="team-thumb__lines">
+                <i></i><i></i><i></i>
+              </span>
+              <span class="team-thumb__manager">
+                <i></i><i></i>
+              </span>
+            </span>
             <span class="team-card__title">{{ team_labels.sales }}</span>
             <span class="team-card__desc">Includes your professional profile details and reporting hierarchy.</span>
           </button>
@@ -61,15 +76,5 @@
     </p>
     {% endif %}
   </div>
-
-  <div id="team-preview-popup" class="team-preview-popup" hidden aria-hidden="true">
-    <p class="team-preview-popup__label">Live Preview</p>
-    <div class="team-preview-popup__frame">
-      <div id="team-preview-html" class="signature-preview team-preview-popup__signature"></div>
-    </div>
-  </div>
 </div>
-{% endblock %}
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/team.js') }}"></script>
 {% endblock %}

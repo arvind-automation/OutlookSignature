@@ -383,7 +383,7 @@ def _manager_panel(values: dict, level: int) -> str:
     )
 
 
-def manager_block(values: dict) -> str:
+def manager_block(values: dict, *, indent: int = 0) -> str:
     panels = [_manager_panel(values, 1), _manager_panel(values, 2)]
     panels = [panel for panel in panels if panel]
     if not panels:
@@ -399,7 +399,7 @@ def manager_block(values: dict) -> str:
             f"{panel}</td>"
         )
     return (
-        '<tr><td colspan="2" style="padding:10px 0 0;">'
+        f'<tr><td colspan="2" style="padding:10px 0 0 {indent}px;">'
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
         f'width="100%" style="width:100%;border-collapse:collapse;"><tr>{"".join(cells)}</tr>'
         "</table></td></tr>"
@@ -487,7 +487,7 @@ def logo_cell(assets: dict) -> str:
     )
 
 
-def social_row(socials: list[dict]) -> str:
+def social_row(socials: list[dict], *, indent: int = 14) -> str:
     if not socials:
         return ""
     cells = []
@@ -508,7 +508,7 @@ def social_row(socials: list[dict]) -> str:
     if not cells:
         return ""
     return (
-        '<tr><td colspan="2" style="padding:9px 14px 10px;border-top:1px solid #EEE4E7;">'
+        f'<tr><td colspan="2" style="padding:9px {indent}px 10px;border-top:1px solid #EEE4E7;">'
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
         f'style="border-collapse:collapse;"><tr>{"".join(cells)}</tr></table></td></tr>'
     )
@@ -612,8 +612,8 @@ def _linked_text(label: str, href: str = "", *, color: str | None = None) -> str
     )
 
 
-def _new_template_managers(values: dict, team: str) -> str:
-    return manager_block(values) if (team or "").lower() == "sales" else ""
+def _new_template_managers(values: dict, team: str, *, indent: int = 0) -> str:
+    return manager_block(values, indent=indent) if (team or "").lower() == "sales" else ""
 
 
 def build_logo_header_template(values: dict, assets: dict, *, team: str = "") -> str:
@@ -668,8 +668,8 @@ def build_logo_header_template(values: dict, assets: dict, *, team: str = "") ->
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" '
         f'style="width:600px;max-width:600px;border-collapse:collapse;background:#ffffff;'
         f'font-family:Arial,Helvetica,sans-serif;color:{BRAND["muted"]};">'
-        f'{logo_row}{detail_rows}{social_row(assets.get("socials") or [])}'
-        f'{_new_template_managers(values, team)}</table>'
+        f'{logo_row}{detail_rows}{_new_template_managers(values, team, indent=34)}'
+        f'{social_row(assets.get("socials") or [], indent=34)}</table>'
     )
 
 
@@ -715,7 +715,7 @@ def build_logo_sidebar_template(values: dict, assets: dict, *, team: str = "") -
         f'{header}<tr>{logo_cell_html}<td width="{detail_width}" style="width:{detail_width}px;'
         f'padding:14px 0 12px;vertical-align:top;"><table role="presentation" cellpadding="0" '
         f'cellspacing="0" border="0" style="border-collapse:collapse;">{rows}</table></td></tr>'
-        f'{social_row(assets.get("socials") or [])}{_new_template_managers(values, team)}</table>'
+        f'{_new_template_managers(values, team, indent=18)}{social_row(assets.get("socials") or [])}</table>'
     )
 
 
@@ -768,8 +768,8 @@ def build_logo_profile_template(values: dict, assets: dict, *, team: str = "") -
         f'cellspacing="0" border="0" style="border-collapse:collapse;">{detail_rows}'
         f'<tr><td style="padding-top:10px;"><table role="presentation" cellpadding="0" cellspacing="0" '
         f'border="0" style="border-collapse:collapse;">{contact_rows}</table></td></tr></table></td></tr>'
-        f'{address_row}{social_row(assets.get("socials") or [])}'
-        f'{_new_template_managers(values, team)}</table>'
+        f'{address_row}{_new_template_managers(values, team, indent=14)}'
+        f'{social_row(assets.get("socials") or [])}</table>'
     )
 
 
