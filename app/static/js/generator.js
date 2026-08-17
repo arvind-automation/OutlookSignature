@@ -254,6 +254,7 @@
         form: getFormValues(),
         templateId: state.templateId,
         forEmail: !!forEmail,
+        assetOrigin: window.location.origin,
         team: state.team,
       }),
     }).then(function (res) {

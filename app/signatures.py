@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import struct
+from base64 import b64encode
 from html import escape
 from pathlib import Path
 from urllib.parse import quote, urlparse
@@ -12,6 +13,7 @@ from flask import current_app, url_for
 
 BRAND = {
     "maroon": "#8B1538",
+    "contact": "#8B1538",
     "charcoal": "#2C2C2C",
     "muted": "#6B6B6B",
     "text": "#6B6B6B",
@@ -330,15 +332,15 @@ def _contact_row(label: str, display: str, href: str = "") -> str:
     if href:
         content = (
             f'<a href="{escape_html(href)}" '
-            f'style="color:{BRAND["link"]};text-decoration:none;">{content}</a>'
+            f'style="color:{BRAND["contact"]};text-decoration:none;">{content}</a>'
         )
     return (
         "<tr>"
         f'<td width="20" style="width:20px;padding:1px 8px 1px 0;vertical-align:top;'
         f'font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:15px;'
-        f'font-weight:700;color:{BRAND["maroon"]};">{escape_html(label)}:</td>'
+        f'font-weight:700;color:{BRAND["contact"]};">{escape_html(label)}:</td>'
         f'<td style="padding:1px 0;vertical-align:top;font-family:Arial,Helvetica,sans-serif;'
-        f'font-size:10px;line-height:15px;color:{BRAND["muted"]};word-break:break-word;">'
+        f'font-size:10px;line-height:15px;color:{BRAND["contact"]};word-break:break-word;">'
         f"{content}</td></tr>"
     )
 
@@ -459,6 +461,14 @@ def _safe_asset_url(value) -> str:
     url = clean_text(value)
     if url.startswith("/static/"):
         return url
+    for prefix in (
+        "data:image/png;base64,",
+        "data:image/jpeg;base64,",
+        "data:image/gif;base64,",
+    ):
+        if url.startswith(prefix):
+            payload = url[len(prefix) :]
+            return url if payload and re.fullmatch(r"[A-Za-z0-9+/=]+", payload) else ""
     return normalize_https_url(url)
 
 
@@ -487,7 +497,7 @@ def logo_cell(assets: dict) -> str:
     )
 
 
-def social_row(socials: list[dict], *, indent: int = 14) -> str:
+def social_row(socials: list[dict], *, indent: int = 0) -> str:
     if not socials:
         return ""
     cells = []
@@ -496,9 +506,11 @@ def social_row(socials: list[dict], *, indent: int = 14) -> str:
         icon = normalize_https_url(social.get("icon"))
         if not href or not icon:
             continue
-        padding = "0 8px 0 0" if index < len(socials) - 1 else "0"
+        # Keep the icons visually grouped. A fixed 26px cell plus 4px padding
+        # created a noticeably large gap between LinkedIn and Instagram.
+        padding = "0 3px 0 0" if index < len(socials) - 1 else "0"
         cells.append(
-            f'<td width="32" style="width:32px;padding:{padding};vertical-align:middle;">'
+            f'<td width="22" style="width:22px;padding:{padding};vertical-align:middle;">'
             f'<a href="{escape_html(href)}" style="display:block;text-decoration:none;border:0;">'
             f'<img src="{escape_html(icon)}" width="22" height="22" '
             f'alt="{escape_html(social.get("alt") or "Social profile")}" '
@@ -546,7 +558,7 @@ def _build_branded_template(
     detail_cell = (
         f'<td width="{detail_width}"'
         + (' colspan="2"' if not logo else "")
-        + f' style="width:{detail_width}px;padding:14px 16px;vertical-align:top;'
+        + f' style="width:{detail_width}px;padding:14px 16px 14px 0;vertical-align:top;'
         f'background:#ffffff;">{contact_block(values, team=team)}</td>'
     )
     return (
@@ -577,7 +589,7 @@ def build_minimal_template(values: dict, *, team: str = "") -> str:
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
         'width="420" style="width:420px;max-width:420px;border-collapse:collapse;'
         f'font-family:Arial,Helvetica,sans-serif;color:{BRAND["muted"]};">'
-        f'<tr><td style="padding:8px 0 8px 34px;">{contact_block(values, team=team)}</td></tr>'
+        f'<tr><td style="padding:8px 0;">{contact_block(values, team=team)}</td></tr>'
         "</table>"
     )
 
@@ -607,7 +619,7 @@ def _linked_text(label: str, href: str = "", *, color: str | None = None) -> str
     if not href:
         return safe_label
     return (
-        f'<a href="{escape_html(href)}" style="color:{color or BRAND["charcoal"]};'
+        f'<a href="{escape_html(href)}" style="color:{color or BRAND["contact"]};'
         f'text-decoration:none;">{safe_label}</a>'
     )
 
@@ -647,20 +659,25 @@ def build_logo_header_template(values: dict, assets: dict, *, team: str = "") ->
     contact_line = "&nbsp; | &nbsp;".join(contacts)
 
     detail_rows = ""
-    for content in (identity, contact_line, escape_html(values["address"])):
+    details = (
+        (identity, BRAND["muted"]),
+        (contact_line, BRAND["contact"]),
+        (escape_html(values["address"]), BRAND["contact"]),
+    )
+    for content, color in details:
         if content:
             detail_rows += (
-                f'<tr><td colspan="2" style="padding:0 0 3px 34px;font-size:12px;line-height:17px;'
-                f'color:{BRAND["muted"]};">{content}</td></tr>'
+                f'<tr><td colspan="2" style="padding:0 0 3px;font-size:12px;line-height:17px;'
+                f'color:{color};">{content}</td></tr>'
             )
     if values["websiteLabel"]:
         detail_rows += (
-            f'<tr><td colspan="2" style="padding:0 0 0 34px;font-size:12px;line-height:17px;'
+            f'<tr><td colspan="2" style="padding:0;font-size:12px;line-height:17px;'
             f'color:{BRAND["muted"]};">Web: '
-            f'{_linked_text(values["websiteLabel"], values["websiteHref"], color=BRAND["maroon"])}</td></tr>'
+            f'{_linked_text(values["websiteLabel"], values["websiteHref"], color=BRAND["contact"])}</td></tr>'
         )
     logo_row = (
-        f'<tr><td colspan="2" style="padding:18px 0 14px 34px;vertical-align:middle;">{logo}</td></tr>'
+        f'<tr><td colspan="2" style="padding:18px 0 14px;vertical-align:middle;">{logo}</td></tr>'
         if logo
         else ""
     )
@@ -668,8 +685,8 @@ def build_logo_header_template(values: dict, assets: dict, *, team: str = "") ->
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" '
         f'style="width:600px;max-width:600px;border-collapse:collapse;background:#ffffff;'
         f'font-family:Arial,Helvetica,sans-serif;color:{BRAND["muted"]};">'
-        f'{logo_row}{detail_rows}{_new_template_managers(values, team, indent=34)}'
-        f'{social_row(assets.get("socials") or [], indent=34)}</table>'
+        f'{logo_row}{detail_rows}{_new_template_managers(values, team)}'
+        f'{social_row(assets.get("socials") or [])}</table>'
     )
 
 
@@ -678,12 +695,12 @@ def build_logo_sidebar_template(values: dict, assets: dict, *, team: str = "") -
     header = ""
     if values["fullName"]:
         header += (
-            f'<tr><td colspan="2" style="padding:12px 0 0 18px;font-size:17px;line-height:21px;'
+            f'<tr><td colspan="2" style="padding:12px 0 0;font-size:17px;line-height:21px;'
             f'font-weight:700;color:{BRAND["charcoal"]};">{escape_html(values["fullName"])}</td></tr>'
         )
     if values["designation"]:
         header += (
-            f'<tr><td colspan="2" style="padding:1px 0 8px 18px;border-bottom:1px dotted {BRAND["line"]};'
+            f'<tr><td colspan="2" style="padding:1px 0 8px;border-bottom:1px dotted {BRAND["line"]};'
             f'font-size:14px;line-height:19px;color:{BRAND["maroon"]};">'
             f'{escape_html(values["designation"])}</td></tr>'
         )
@@ -698,9 +715,9 @@ def build_logo_sidebar_template(values: dict, assets: dict, *, team: str = "") -
         if value:
             rows += (
                 f'<tr><td style="padding:0 5px 2px 0;font-size:11px;font-weight:700;'
-                f'color:{BRAND["maroon"]};vertical-align:top;">{label}:</td>'
-                f'<td style="padding:0 0 2px;font-size:12px;line-height:16px;color:{BRAND["charcoal"]};">'
-                f'{_linked_text(value, href)}</td></tr>'
+                f'color:{BRAND["contact"]};vertical-align:top;">{label}:</td>'
+                f'<td style="padding:0 0 2px;font-size:12px;line-height:16px;color:{BRAND["contact"]};">'
+                f'{_linked_text(value, href, color=BRAND["contact"])}</td></tr>'
             )
     logo_cell_html = (
         f'<td width="170" style="width:170px;padding:14px 20px 12px 20px;vertical-align:middle;">{logo}</td>'
@@ -715,7 +732,7 @@ def build_logo_sidebar_template(values: dict, assets: dict, *, team: str = "") -
         f'{header}<tr>{logo_cell_html}<td width="{detail_width}" style="width:{detail_width}px;'
         f'padding:14px 0 12px;vertical-align:top;"><table role="presentation" cellpadding="0" '
         f'cellspacing="0" border="0" style="border-collapse:collapse;">{rows}</table></td></tr>'
-        f'{_new_template_managers(values, team, indent=18)}{social_row(assets.get("socials") or [])}</table>'
+        f'{_new_template_managers(values, team)}{social_row(assets.get("socials") or [])}</table>'
     )
 
 
@@ -742,9 +759,9 @@ def build_logo_profile_template(values: dict, assets: dict, *, team: str = "") -
         if value:
             contact_rows += (
                 f'<tr><td width="24" style="width:24px;padding:2px 8px 2px 0;font-size:11px;'
-                f'font-weight:700;color:{BRAND["maroon"]};vertical-align:top;">{symbol}</td>'
-                f'<td style="padding:2px 0;font-size:13px;line-height:18px;color:{BRAND["charcoal"]};">'
-                f'{_linked_text(value, href)}</td></tr>'
+                f'font-weight:700;color:{BRAND["contact"]};vertical-align:top;">{symbol}</td>'
+                f'<td style="padding:2px 0;font-size:13px;line-height:18px;color:{BRAND["contact"]};">'
+                f'{_linked_text(value, href, color=BRAND["contact"])}</td></tr>'
             )
     logo_panel = (
         f'<td width="190" style="width:190px;padding:20px;vertical-align:middle;text-align:center;'
@@ -755,13 +772,13 @@ def build_logo_profile_template(values: dict, assets: dict, *, team: str = "") -
     address_row = ""
     if values["address"]:
         address_row = (
-            f'<tr><td colspan="2" style="padding:8px 16px;background:{BRAND["charcoal"]};'
+            f'<tr><td colspan="2" style="padding:8px 16px;background:#000000;'
             f'border-bottom:4px solid {BRAND["maroon"]};font-size:13px;line-height:18px;'
             f'text-align:center;color:#ffffff;">{escape_html(values["address"])}</td></tr>'
         )
     return (
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" '
-        f'style="width:600px;max-width:600px;border-collapse:collapse;background:#ffffff;'
+        f'style="width:600px;max-width:600px;border-collapse:collapse;background:#fffff;'
         f'font-family:Arial,Helvetica,sans-serif;color:{BRAND["muted"]};">'
         f'<tr>{logo_panel}<td style="padding:12px 0 12px 28px;vertical-align:middle;'
         f'border-left:3px solid {BRAND["maroon"]};"><table role="presentation" cellpadding="0" '
@@ -770,6 +787,20 @@ def build_logo_profile_template(values: dict, assets: dict, *, team: str = "") -
         f'border="0" style="border-collapse:collapse;">{contact_rows}</table></td></tr></table></td></tr>'
         f'{address_row}{_new_template_managers(values, team, indent=14)}'
         f'{social_row(assets.get("socials") or [])}</table>'
+    )
+
+
+def _with_signoff(signature_html: str, *, width: int) -> str:
+    """Add the shared closing above a signature without changing its layout."""
+    return (
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+        f'width="{width}" style="width:{width}px;max-width:{width}px;border-collapse:collapse;'
+        'background:#ffffff;font-family:Arial,Helvetica,sans-serif;">'
+        '<tr><td style="padding:0 0 18px;font-family:Arial,Helvetica,sans-serif;'
+        'font-size:16px;line-height:22px;font-weight:400;color:#000000;">'
+        'Thanks &amp; Regards,</td></tr>'
+        f'<tr><td style="padding:0;vertical-align:top;">{signature_html}</td></tr>'
+        '</table>'
     )
 
 
@@ -798,16 +829,24 @@ def build_signature_html(
         )
     }
     if template_id == "compact":
-        return build_compact_template(values, assets, team=team)
-    if template_id == "minimal":
-        return build_minimal_template(values, team=team)
-    if template_id == "logo-header":
-        return build_logo_header_template(values, assets, team=team)
-    if template_id == "logo-sidebar":
-        return build_logo_sidebar_template(values, assets, team=team)
-    if template_id == "logo-profile":
-        return build_logo_profile_template(values, assets, team=team)
-    return build_standard_template(values, assets, team=team)
+        signature_html = build_compact_template(values, assets, team=team)
+        width = 560
+    elif template_id == "minimal":
+        signature_html = build_minimal_template(values, team=team)
+        width = 420
+    elif template_id == "logo-header":
+        signature_html = build_logo_header_template(values, assets, team=team)
+        width = 600
+    elif template_id == "logo-sidebar":
+        signature_html = build_logo_sidebar_template(values, assets, team=team)
+        width = 600
+    elif template_id == "logo-profile":
+        signature_html = build_logo_profile_template(values, assets, team=team)
+        width = 600
+    else:
+        signature_html = build_standard_template(values, assets, team=team)
+        width = 600
+    return _with_signoff(signature_html, width=width)
 
 
 def static_root() -> Path:
@@ -849,20 +888,41 @@ def preview_asset_url(rel_path: str | None) -> str:
     return url_for("static", filename=rel) if rel else ""
 
 
-def email_asset_url(rel_path: str | None) -> str:
+def email_asset_url(
+    rel_path: str | None, *, public_base_url: str = ""
+) -> str:
     rel = _resolved_relative_asset(rel_path)
     if not rel:
         return ""
     if Path(rel).suffix.lower() not in {".png", ".jpg", ".jpeg", ".gif"}:
         return ""
     configured = current_app.config.get("PUBLIC_ASSET_BASE_URL") or ""
-    if not configured:
+    if not normalize_https_url(configured):
+        configured = public_base_url
+    if not normalize_https_url(configured):
         app_base = current_app.config.get("APP_BASE_URL") or ""
         configured = app_base if normalize_https_url(app_base) else ""
     origin = normalize_https_url(configured)
-    if not origin:
+    if origin:
+        return f'{origin.rstrip("/")}/static/{quote(rel, safe="/")}'
+
+    # Local development and private deployments have no recipient-accessible
+    # HTTPS host. Embed backend-controlled raster assets so rich copy still
+    # produces a self-contained signature instead of blocking the action.
+    path = resolve_static_path(rel)
+    mime_type = {
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".gif": "image/gif",
+    }.get(Path(rel).suffix.lower())
+    if not path or not path.is_file() or not mime_type:
         return ""
-    return f'{origin.rstrip("/")}/static/{quote(rel, safe="/")}'
+    try:
+        encoded = b64encode(path.read_bytes()).decode("ascii")
+    except OSError:
+        return ""
+    return f"data:{mime_type};base64,{encoded}"
 
 
 def _png_dimensions(path: Path | None) -> tuple[int, int] | None:
@@ -906,7 +966,9 @@ def _org_value(org, name: str, default=None):
     return getattr(org, name, default)
 
 
-def assets_from_org(org, *, for_email: bool = False) -> dict:
+def assets_from_org(
+    org, *, for_email: bool = False, public_asset_base_url: str = ""
+) -> dict:
     """Return only backend-approved organization branding configuration."""
     slug = clean_text(_org_value(org, "slug", "arvind-limited"))
     label = clean_text(_org_value(org, "label", "Arvind Limited"))
@@ -933,7 +995,12 @@ def assets_from_org(org, *, for_email: bool = False) -> dict:
         else 110
     )
 
-    asset_url = email_asset_url if for_email else preview_asset_url
+    if for_email:
+        asset_url = lambda path: email_asset_url(
+            path, public_base_url=public_asset_base_url
+        )
+    else:
+        asset_url = preview_asset_url
     website_href = normalize_https_url(website, add_scheme=True)
     banner_href = normalize_https_url(ORGANIZATION_BANNER_LINKS.get(slug))
     return {

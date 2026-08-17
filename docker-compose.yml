@@ -39,6 +39,8 @@ services:
       DATABASE_URL: mysql+pymysql://root:${MYSQL_ROOT_PASSWORD:-rootpass}@db:3306/${MYSQL_DATABASE:-digitalsignature_arvind}
       SECRET_KEY: ${SECRET_KEY:-change-me}
       FLASK_ENV: ${FLASK_ENV:-development}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:5000}
+      PUBLIC_ASSET_BASE_URL: ${PUBLIC_ASSET_BASE_URL:-}
     depends_on:
       init-db:
         condition: service_completed_successfully

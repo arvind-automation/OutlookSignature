@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from flask import Blueprint, current_app, jsonify, request, session
 
 from app.auth import current_user, write_audit
@@ -6,6 +8,21 @@ from app.models import Organization, SavedSignature
 from app.signatures import DEFAULT_FORM, build_signature_html, assets_from_org
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
+
+
+def _request_public_asset_origin(candidate: str = "") -> str:
+    """Return a browser-supplied HTTPS origin only when it matches this host."""
+    origin = (candidate or request.headers.get("Origin") or "").strip()
+    parsed = urlparse(origin)
+    if (
+        parsed.scheme.lower() != "https"
+        or not parsed.netloc
+        or parsed.username
+        or parsed.password
+        or parsed.netloc.casefold() != request.host.casefold()
+    ):
+        return ""
+    return f"https://{parsed.netloc}"
 
 
 def _require_api_user():
@@ -59,7 +76,15 @@ def preview():
             }
         )
 
-    assets = assets_from_org(org, for_email=for_email)
+    assets = assets_from_org(
+        org,
+        for_email=for_email,
+        public_asset_base_url=(
+            _request_public_asset_origin(payload.get("assetOrigin") or "")
+            if for_email
+            else ""
+        ),
+    )
     html = build_signature_html(template_id, form, assets, team=team)
     copy_error = ""
     if for_email and template_id != "minimal" and not assets.get("logo"):
