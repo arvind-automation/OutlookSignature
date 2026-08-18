@@ -1415,6 +1415,7 @@ textarea {
 }
 
 .signature-preview {
+  padding: 32px;
   box-shadow: 0 14px 34px rgba(50, 31, 37, 0.09);
 }
 
@@ -1823,6 +1824,10 @@ textarea {
   .preview-frame {
     margin: 16px 20px 0;
     padding: 24px 16px 16px;
+  }
+
+  .signature-preview {
+    padding: 24px;
   }
 
   .layout-panel {
@@ -2666,6 +2671,7 @@ h2,
   height: 260px;
   border: 48px solid rgba(181, 31, 76, 0.035);
   border-radius: 50%;
+  pointer-events: none;
 }
 
 .app-header::after {
@@ -2673,6 +2679,7 @@ h2,
   width: 5px;
   height: auto;
   background: linear-gradient(180deg, var(--wine-bright), var(--wine), var(--sand));
+  pointer-events: none;
 }
 
 .brand-logo--header {
@@ -3247,6 +3254,65 @@ h4,
 /* --------------------------------------------------------------------------
    Generator: "Choose Layout" as a third vertical column, always stacked.
    -------------------------------------------------------------------------- */
+
+#generator-view.app {
+  padding-block: clamp(14px, 1.5vw, 22px);
+}
+
+#generator-view .app-header {
+  min-height: 0;
+  margin-bottom: 14px;
+  padding: 12px 20px;
+  gap: clamp(14px, 1.5vw, 22px);
+}
+
+#generator-view .brand-logo--header {
+  height: 54px;
+  max-width: 225px;
+}
+
+#generator-view .app-header h1 {
+  margin-bottom: 0;
+}
+
+#generator-view .app-header p {
+  margin-top: 4px;
+}
+
+#generator-view .app-header__meta {
+  gap: 6px;
+}
+
+@media (max-width: 1180px) {
+  #generator-view .app-header {
+    row-gap: 8px;
+  }
+
+  #generator-view .app-header__meta {
+    padding-top: 8px;
+  }
+}
+
+@media (max-width: 720px) {
+  #generator-view.app {
+    padding-block: 12px;
+  }
+
+  #generator-view .app-header {
+    margin-bottom: 12px;
+    padding: 12px;
+    gap: 8px;
+  }
+
+  #generator-view .brand-logo--header {
+    height: 48px;
+  }
+
+  #generator-view .app-header__content,
+  #generator-view .app-header__meta {
+    padding-top: 8px;
+  }
+}
 
 .layout-panel {
   position: relative;

@@ -790,20 +790,6 @@ def build_logo_profile_template(values: dict, assets: dict, *, team: str = "") -
     )
 
 
-def _with_signoff(signature_html: str, *, width: int) -> str:
-    """Add the shared closing above a signature without changing its layout."""
-    return (
-        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
-        f'width="{width}" style="width:{width}px;max-width:{width}px;border-collapse:collapse;'
-        'background:#ffffff;font-family:Arial,Helvetica,sans-serif;">'
-        '<tr><td style="padding:0 0 18px;font-family:Arial,Helvetica,sans-serif;'
-        'font-size:16px;line-height:22px;font-weight:400;color:#000000;">'
-        'Thanks &amp; Regards,</td></tr>'
-        f'<tr><td style="padding:0;vertical-align:top;">{signature_html}</td></tr>'
-        '</table>'
-    )
-
-
 def build_signature_html(
     template_id: str, raw_values: dict, asset_urls: dict, *, team: str = ""
 ) -> str:
@@ -830,23 +816,17 @@ def build_signature_html(
     }
     if template_id == "compact":
         signature_html = build_compact_template(values, assets, team=team)
-        width = 560
     elif template_id == "minimal":
         signature_html = build_minimal_template(values, team=team)
-        width = 420
     elif template_id == "logo-header":
         signature_html = build_logo_header_template(values, assets, team=team)
-        width = 600
     elif template_id == "logo-sidebar":
         signature_html = build_logo_sidebar_template(values, assets, team=team)
-        width = 600
     elif template_id == "logo-profile":
         signature_html = build_logo_profile_template(values, assets, team=team)
-        width = 600
     else:
         signature_html = build_standard_template(values, assets, team=team)
-        width = 600
-    return _with_signoff(signature_html, width=width)
+    return signature_html
 
 
 def static_root() -> Path:
