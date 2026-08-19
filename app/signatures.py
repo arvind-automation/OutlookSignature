@@ -34,6 +34,11 @@ TEMPLATES = [
         "description": "Details, logo and social links without a banner",
     },
     {
+        "id": "logo-sidebar",
+        "name": "Logo Sidebar",
+        "description": "Profile heading with logo, contacts and social links",
+    },
+    {
         "id": "minimal",
         "name": "Minimal",
         "description": "Text-only signature for lightweight clients",
@@ -47,11 +52,6 @@ TEMPLATES = [
         "id": "logo-header",
         "name": "Logo Header",
         "description": "Prominent company logo with compact contact details",
-    },
-    {
-        "id": "logo-sidebar",
-        "name": "Logo Sidebar",
-        "description": "Profile heading with logo, contacts and social links",
     },
 ]
 
@@ -129,7 +129,7 @@ ORGANIZATION_SEEDS = [
         "label": "Arvind GCC",
         "organization": "Arvind GCC",
         "website": "www.arvind.com",
-        "logo_path": "assets/arvind-gcc-logo-transparent.png",
+        "logo_path": "assets/arvind-gcc-logo-v2.png",
         "banner_path": None,
         "watermark_path": "assets/watermark-a.png",
         "logo_bg": "#ffffff",
@@ -491,8 +491,8 @@ def logo_cell(assets: dict) -> str:
     )
 
 
-def social_row(socials: list[dict], *, indent: int = 0) -> str:
-    if not socials:
+def social_row(socials: list[dict], *, indent: int = 0, tagline: str = "") -> str:
+    if not socials and not tagline:
         return ""
     cells = []
     for index, social in enumerate(socials):
@@ -511,12 +511,20 @@ def social_row(socials: list[dict], *, indent: int = 0) -> str:
             'style="display:block;width:22px;height:22px;border:0;outline:none;'
             'text-decoration:none;" /></a></td>'
         )
-    if not cells:
+    if not cells and not tagline:
         return ""
+    tagline_cell = (
+        f'<td width="100%" style="width:100%;padding:0 8px 0 12px;vertical-align:middle;'
+        'font-family:Georgia,serif;font-size:11px;line-height:15px;font-weight:700;'
+        f'font-style:italic;text-align:center;color:{BRAND["maroon"]};white-space:normal;">'
+        f'{escape_html(tagline)}</td>'
+        if tagline
+        else ""
+    )
     return (
         f'<tr><td colspan="2" style="padding:9px {indent}px 10px;border-top:1px solid #EEE4E7;">'
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
-        f'style="border-collapse:collapse;"><tr>{"".join(cells)}</tr></table></td></tr>'
+        f'width="100%" style="width:100%;border-collapse:collapse;"><tr>{"".join(cells)}{tagline_cell}</tr></table></td></tr>'
     )
 
 
@@ -560,7 +568,7 @@ def _build_branded_template(
         f'width="{width}" style="width:{width}px;max-width:{width}px;border-collapse:collapse;'
         f'font-family:Arial,Helvetica,sans-serif;background:#ffffff;color:{BRAND["muted"]};">'
         f"<tr>{detail_cell}{logo}</tr>"
-        f'{social_row(assets.get("socials") or [])}'
+        f'{social_row(assets.get("socials") or [], tagline=assets.get("socialTagline") or "")}'
         f'{banner_row(assets) if include_banner else ""}'
         "</table>"
     )
@@ -674,12 +682,12 @@ def build_logo_header_template(values: dict, assets: dict, *, team: str = "") ->
         f'style="width:600px;max-width:600px;border-collapse:collapse;background:#ffffff;'
         f'font-family:Arial,Helvetica,sans-serif;color:{BRAND["muted"]};">'
         f'{logo_row}{detail_rows}{_new_template_managers(values, team)}'
-        f'{social_row(assets.get("socials") or [])}</table>'
+        f'{social_row(assets.get("socials") or [], tagline=assets.get("socialTagline") or "")}</table>'
     )
 
 
 def build_logo_sidebar_template(values: dict, assets: dict, *, team: str = "") -> str:
-    logo = _logo_markup(assets, width=135)
+    logo = _logo_markup(assets, width=160)
     header = ""
     if values["fullName"]:
         header += (
@@ -707,11 +715,11 @@ def build_logo_sidebar_template(values: dict, assets: dict, *, team: str = "") -
                 f'{_address_html(value) if label == "A" else _linked_text(value, href, color=BRAND["contact"])}</td></tr>'
             )
     logo_cell_html = (
-        f'<td width="170" style="width:170px;padding:14px 20px 12px 20px;vertical-align:middle;">{logo}</td>'
+        f'<td width="190" style="width:190px;padding:14px 14px 12px;vertical-align:middle;text-align:left;">{logo}</td>'
         if logo
         else ""
     )
-    detail_width = 430 if logo else 600
+    detail_width = 410 if logo else 600
     return (
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" '
         f'style="width:600px;max-width:600px;border-collapse:collapse;background:#ffffff;'
@@ -719,7 +727,7 @@ def build_logo_sidebar_template(values: dict, assets: dict, *, team: str = "") -
         f'{header}<tr>{logo_cell_html}<td width="{detail_width}" style="width:{detail_width}px;'
         f'padding:14px 0 12px;vertical-align:top;"><table role="presentation" cellpadding="0" '
         f'cellspacing="0" border="0" style="border-collapse:collapse;">{rows}</table></td></tr>'
-        f'{_new_template_managers(values, team)}{social_row(assets.get("socials") or [])}</table>'
+        f'{_new_template_managers(values, team)}{social_row(assets.get("socials") or [], tagline=assets.get("socialTagline") or "")}</table>'
     )
 
 
@@ -787,6 +795,7 @@ def build_logo_profile_template(values: dict, assets: dict, *, team: str = "") -
                 if logo
                 else ""
             )
+            # Logo Profile already carries the GCC tagline in its compact footer.
             + social_row(assets.get("socials") or [])
             + "</table></td>"
         )
@@ -842,6 +851,7 @@ def build_signature_html(
             "bannerHref",
             "socials",
             "slug",
+            "socialTagline",
         )
     }
     if template_id == "compact":
@@ -1031,4 +1041,7 @@ def assets_from_org(
         "logoHref": website_href,
         "bannerHref": banner_href,
         "socials": organization_social_links(slug, label, website),
+        "socialTagline": (
+            "Built On Legacy, Designed For The Future" if slug == "arvind-gcc" else ""
+        ),
     }

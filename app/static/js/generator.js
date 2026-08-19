@@ -294,12 +294,14 @@
       })
       .then(function (data) {
         // Server demo defaults are non-empty ("Shalom…"); replace with SSO prefill when no saved signature.
+        var savedForm = data.form || {};
         var form = data.isDefault
           ? baseFormDefaults()
-          : applyPrefillToEmpty(data.form || baseFormDefaults());
-        if (data.isDefault && !form.address) {
-          var defaultOrg = state.orgsBySlug[form.company] || {};
-          form.address = defaultOrg.defaultAddress || "";
+          : applyPrefillToEmpty(savedForm || baseFormDefaults());
+        var defaultOrg = state.orgsBySlug[form.company] || {};
+        var hasSavedAddress = !!(savedForm.address || "").trim();
+        if (defaultOrg.defaultAddress && (data.isDefault || !hasSavedAddress)) {
+          form.address = defaultOrg.defaultAddress;
         }
         setFormValues(form);
         if (form.templateId) state.templateId = form.templateId;
