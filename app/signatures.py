@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 import struct
+import textwrap
 from base64 import b64encode
 from html import escape
 from pathlib import Path
@@ -38,6 +39,11 @@ TEMPLATES = [
         "description": "Text-only signature for lightweight clients",
     },
     {
+        "id": "logo-profile",
+        "name": "Logo Profile",
+        "description": "Two-column profile with organization footer",
+    },
+    {
         "id": "logo-header",
         "name": "Logo Header",
         "description": "Prominent company logo with compact contact details",
@@ -46,11 +52,6 @@ TEMPLATES = [
         "id": "logo-sidebar",
         "name": "Logo Sidebar",
         "description": "Profile heading with logo, contacts and social links",
-    },
-    {
-        "id": "logo-profile",
-        "name": "Logo Profile",
-        "description": "Circular company mark with a strong address footer",
     },
 ]
 
@@ -66,14 +67,10 @@ DEFAULT_FORM = {
     "address": "",
     "managerFirstName": "",
     "managerLastName": "",
-    "managerDesignation": "",
     "managerEmail": "",
-    "managerPhone": "",
     "manager2FirstName": "",
     "manager2LastName": "",
-    "manager2Designation": "",
     "manager2Email": "",
-    "manager2Phone": "",
 }
 
 # Canonical organization assets. Paths are always backend-controlled and are
@@ -89,6 +86,7 @@ ORGANIZATION_SEEDS = [
         "watermark_path": "assets/watermark-a.png",
         "logo_bg": "#ffffff",
         "logo_width": 230,
+        "default_address": "",
     },
     {
         "slug": "arvind-smartspaces",
@@ -100,6 +98,7 @@ ORGANIZATION_SEEDS = [
         "watermark_path": "assets/watermark-a.png",
         "logo_bg": "#ffffff",
         "logo_width": 230,
+        "default_address": "",
     },
     {
         "slug": "arvind-fashions",
@@ -111,6 +110,7 @@ ORGANIZATION_SEEDS = [
         "watermark_path": "assets/watermark-a.png",
         "logo_bg": "#ffffff",
         "logo_width": 230,
+        "default_address": "",
     },
     {
         "slug": "arvind-limited",
@@ -122,6 +122,7 @@ ORGANIZATION_SEEDS = [
         "watermark_path": "assets/watermark-a.png",
         "logo_bg": "#ffffff",
         "logo_width": 230,
+        "default_address": "",
     },
     {
         "slug": "arvind-gcc",
@@ -133,6 +134,10 @@ ORGANIZATION_SEEDS = [
         "watermark_path": "assets/watermark-a.png",
         "logo_bg": "#ffffff",
         "logo_width": 260,
+        "default_address": (
+            "Carter, 3rd–6th Floor, Sindhu Bhavan Marg, Bodakdev, "
+            "Ahmedabad, Gujarat -380059"
+        ),
     },
 ]
 
@@ -195,6 +200,10 @@ SOCIAL_PLATFORM_CONFIG = {
     "instagram": {
         "label": "Instagram",
         "icon": "https://img.icons8.com/fluency/48/instagram-new.png",
+    },
+    "website": {
+        "label": "Website",
+        "icon": "https://img.icons8.com/ios-filled/48/8b1538/globe--v1.png",
     },
 }
 
@@ -290,7 +299,6 @@ def normalize_form_values(
     employee_email = safe_email(raw.get("email"))
     manager_email = safe_email(raw.get("managerEmail"))
     manager2_email = safe_email(raw.get("manager2Email"))
-    website_href = normalize_https_url(website, add_scheme=True)
     return {
         "fullName": " ".join(part for part in (first_name, last_name) if part),
         "designation": clean_text(raw.get("designation")),
@@ -300,35 +308,34 @@ def normalize_form_values(
         "emailHref": employee_email,
         "organization": clean_text(organization),
         "address": clean_text(raw.get("address")),
-        "websiteLabel": (
-            re.sub(r"^https?://", "", clean_text(website), flags=re.I)
-            if website_href
-            else ""
-        ),
-        "websiteHref": website_href,
         "managerFullName": " ".join(
             part for part in (manager_first, manager_last) if part
         ),
-        "managerDesignation": clean_text(raw.get("managerDesignation")),
         "managerEmail": manager_email,
         "managerEmailHref": manager_email,
-        "managerPhone": format_indian_phone(raw.get("managerPhone")),
-        "managerPhoneHref": normalize_tel(format_indian_phone(raw.get("managerPhone"))),
         "manager2FullName": " ".join(
             part for part in (manager2_first, manager2_last) if part
         ),
-        "manager2Designation": clean_text(raw.get("manager2Designation")),
         "manager2Email": manager2_email,
         "manager2EmailHref": manager2_email,
-        "manager2Phone": format_indian_phone(raw.get("manager2Phone")),
-        "manager2PhoneHref": normalize_tel(format_indian_phone(raw.get("manager2Phone"))),
     }
 
 
-def _contact_row(label: str, display: str, href: str = "") -> str:
+def _address_html(value: str) -> str:
+    """Escape and wrap long addresses for narrow Outlook table cells."""
+    lines = textwrap.wrap(
+        clean_text(value),
+        width=55,
+        break_long_words=False,
+        break_on_hyphens=False,
+    )
+    return "<br>".join(escape_html(line) for line in lines)
+
+
+def _contact_row(label: str, display: str, href: str = "", *, is_address: bool = False) -> str:
     if not display:
         return ""
-    content = escape_html(display).replace("\n", "<br>")
+    content = _address_html(display) if is_address else escape_html(display).replace("\n", "<br>")
     if href:
         content = (
             f'<a href="{escape_html(href)}" '
@@ -348,12 +355,9 @@ def _contact_row(label: str, display: str, href: str = "") -> str:
 def _manager_panel(values: dict, level: int) -> str:
     prefix = "manager" if level == 1 else "manager2"
     name = values.get(f"{prefix}FullName") or ""
-    title = values.get(f"{prefix}Designation") or ""
     email = values.get(f"{prefix}Email") or ""
     email_href = values.get(f"{prefix}EmailHref") or ""
-    phone = values.get(f"{prefix}Phone") or ""
-    phone_href = values.get(f"{prefix}PhoneHref") or ""
-    if not any((name, title, email, phone)):
+    if not any((name, email)):
         return ""
     identity = ""
     if name:
@@ -362,20 +366,11 @@ def _manager_panel(values: dict, level: int) -> str:
             f'font-size:11px;line-height:15px;font-weight:700;color:{BRAND["charcoal"]};'
             f'word-break:break-word;">{escape_html(name)}</td></tr>'
         )
-    if title:
-        identity += (
-            f'<tr><td style="padding:0 0 4px;font-family:Arial,Helvetica,sans-serif;'
-            f'font-size:10px;line-height:14px;color:{BRAND["muted"]};'
-            f'word-break:break-word;">{escape_html(title)}</td></tr>'
-        )
-    contacts = (
-        _contact_row("E", email, f"mailto:{email_href}" if email_href else "")
-        + _contact_row("P", phone, f"tel:{phone_href}" if phone_href else "")
-    )
+    contacts = _contact_row("E", email, f"mailto:{email_href}" if email_href else "")
     return (
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
         'width="100%" style="width:100%;border-collapse:collapse;">'
-        f'<tr><td style="padding:0 0 4px;font-family:Arial,Helvetica,sans-serif;'
+        f'<tr><td style="padding:0 0 5px;font-family:Arial,Helvetica,sans-serif;'
         f'font-size:9px;line-height:13px;font-weight:700;letter-spacing:.5px;'
         f'color:{BRAND["maroon"]};">LEVEL {level} MANAGER</td></tr>'
         f"{identity}"
@@ -401,7 +396,7 @@ def manager_block(values: dict, *, indent: int = 0) -> str:
             f"{panel}</td>"
         )
     return (
-        f'<tr><td colspan="2" style="padding:10px 0 0 {indent}px;">'
+        f'<tr><td colspan="2" style="padding:18px 0 0 {indent}px;">'
         '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
         f'width="100%" style="width:100%;border-collapse:collapse;"><tr>{"".join(cells)}</tr>'
         "</table></td></tr>"
@@ -432,13 +427,12 @@ def contact_block(values: dict, *, team: str = "") -> str:
             values["email"],
             f'mailto:{values["emailHref"]}' if values["emailHref"] else "",
         )
-        + _contact_row("W", values["websiteLabel"], values["websiteHref"])
         + _contact_row(
             "P",
             values["phone"],
             f'tel:{values["phoneHref"]}' if values["phoneHref"] else "",
         )
-        + _contact_row("A", values["address"])
+        + _contact_row("A", values["address"], is_address=True)
     )
     manager_html = manager_block(values) if (team or "").lower() == "sales" else ""
     divider = ""
@@ -662,7 +656,7 @@ def build_logo_header_template(values: dict, assets: dict, *, team: str = "") ->
     details = (
         (identity, BRAND["muted"]),
         (contact_line, BRAND["contact"]),
-        (escape_html(values["address"]), BRAND["contact"]),
+        (_address_html(values["address"]), BRAND["contact"]),
     )
     for content, color in details:
         if content:
@@ -670,12 +664,6 @@ def build_logo_header_template(values: dict, assets: dict, *, team: str = "") ->
                 f'<tr><td colspan="2" style="padding:0 0 3px;font-size:12px;line-height:17px;'
                 f'color:{color};">{content}</td></tr>'
             )
-    if values["websiteLabel"]:
-        detail_rows += (
-            f'<tr><td colspan="2" style="padding:0;font-size:12px;line-height:17px;'
-            f'color:{BRAND["muted"]};">Web: '
-            f'{_linked_text(values["websiteLabel"], values["websiteHref"], color=BRAND["contact"])}</td></tr>'
-        )
     logo_row = (
         f'<tr><td colspan="2" style="padding:18px 0 14px;vertical-align:middle;">{logo}</td></tr>'
         if logo
@@ -708,7 +696,6 @@ def build_logo_sidebar_template(values: dict, assets: dict, *, team: str = "") -
     contact_values = (
         ("T", values["phone"], f'tel:{values["phoneHref"]}' if values["phoneHref"] else ""),
         ("E", values["email"], f'mailto:{values["emailHref"]}' if values["emailHref"] else ""),
-        ("W", values["websiteLabel"], values["websiteHref"]),
         ("A", values["address"], ""),
     )
     for label, value, href in contact_values:
@@ -717,7 +704,7 @@ def build_logo_sidebar_template(values: dict, assets: dict, *, team: str = "") -
                 f'<tr><td style="padding:0 5px 2px 0;font-size:11px;font-weight:700;'
                 f'color:{BRAND["contact"]};vertical-align:top;">{label}:</td>'
                 f'<td style="padding:0 0 2px;font-size:12px;line-height:16px;color:{BRAND["contact"]};">'
-                f'{_linked_text(value, href, color=BRAND["contact"])}</td></tr>'
+                f'{_address_html(value) if label == "A" else _linked_text(value, href, color=BRAND["contact"])}</td></tr>'
             )
     logo_cell_html = (
         f'<td width="170" style="width:170px;padding:14px 20px 12px 20px;vertical-align:middle;">{logo}</td>'
@@ -737,24 +724,29 @@ def build_logo_sidebar_template(values: dict, assets: dict, *, team: str = "") -
 
 
 def build_logo_profile_template(values: dict, assets: dict, *, team: str = "") -> str:
-    logo = _logo_markup(assets, width=150)
-    detail_rows = ""
+    """Build the two-column Outlook-safe profile signature layout."""
+    logo = _logo_markup(assets, width=160)
+    has_l2_manager = bool(values.get("manager2FullName") or values.get("manager2Email"))
+    # Compact desktop widths; expand only when L1/L2 managers share the left column.
+    signature_width = 520 if has_l2_manager else 440
+    left_width = 320 if has_l2_manager else 240
+    identity_rows = ""
     if values["fullName"]:
-        detail_rows += (
-            f'<tr><td style="padding:0 0 2px;font-size:22px;line-height:26px;font-weight:700;'
+        identity_rows += (
+            f'<tr><td style="padding:0 0 3px;font-size:20px;line-height:25px;font-weight:700;'
             f'color:{BRAND["charcoal"]};">{escape_html(values["fullName"])}</td></tr>'
         )
     for value in (values["designation"], values["organization"]):
         if value:
-            detail_rows += (
-                f'<tr><td style="padding:0 0 2px;font-size:15px;line-height:19px;'
-                f'color:{BRAND["maroon"]};">{escape_html(value)}</td></tr>'
+            identity_rows += (
+                f'<tr><td style="padding:0 0 2px;font-size:13px;line-height:17px;font-weight:600;'
+                f'color:{BRAND["muted"]};">{escape_html(value)}</td></tr>'
             )
+
     contact_rows = ""
     for symbol, value, href in (
         ("P", values["phone"], f'tel:{values["phoneHref"]}' if values["phoneHref"] else ""),
         ("E", values["email"], f'mailto:{values["emailHref"]}' if values["emailHref"] else ""),
-        ("W", values["websiteLabel"], values["websiteHref"]),
     ):
         if value:
             contact_rows += (
@@ -763,30 +755,67 @@ def build_logo_profile_template(values: dict, assets: dict, *, team: str = "") -
                 f'<td style="padding:2px 0;font-size:13px;line-height:18px;color:{BRAND["contact"]};">'
                 f'{_linked_text(value, href, color=BRAND["contact"])}</td></tr>'
             )
-    logo_panel = (
-        f'<td width="190" style="width:190px;padding:20px;vertical-align:middle;text-align:center;'
-        f'border:2px solid {BRAND["maroon"]};border-radius:100px;">{logo}</td>'
-        if logo
+
+    left_column = (
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+        'width="100%" style="width:100%;border-collapse:collapse;">'
+        f'{identity_rows}'
+        + (
+            '<tr><td style="padding:12px 0 0;"><table role="presentation" cellpadding="0" '
+            'cellspacing="0" border="0" style="border-collapse:collapse;">'
+            f'{contact_rows}</table></td></tr>'
+            if contact_rows
+            else ""
+        )
+        + (
+            manager_block(values)
+            if (team or "").lower() == "sales"
+            else ""
+        )
+        + "</table>"
+    )
+
+    right_column = ""
+    if logo or assets.get("socials"):
+        right_column = (
+            f'<td width="200" style="width:200px;padding:16px 14px;vertical-align:middle;'
+            f'text-align:center;border-left:1px solid {BRAND["line"]};">'
+            '<table role="presentation" cellpadding="0" cellspacing="0" border="0" '
+            'width="100%" style="width:100%;border-collapse:collapse;">'
+            + (
+                f'<tr><td style="padding:0 0 14px;text-align:center;">{logo}</td></tr>'
+                if logo
+                else ""
+            )
+            + social_row(assets.get("socials") or [])
+            + "</table></td>"
+        )
+
+    if not right_column:
+        left_width = signature_width
+    address_row = (
+        f'<tr><td colspan="2" style="padding:12px 18px 14px;text-align:center;font-size:12px;'
+        f'line-height:17px;color:{BRAND["muted"]};">{_address_html(values["address"])}</td></tr>'
+        if values["address"]
         else ""
     )
-    address_row = ""
-    if values["address"]:
-        address_row = (
-            f'<tr><td colspan="2" style="padding:8px 16px;background:#000000;'
-            f'border-bottom:4px solid {BRAND["maroon"]};font-size:13px;line-height:18px;'
-            f'text-align:center;color:#ffffff;">{escape_html(values["address"])}</td></tr>'
-        )
+    footer_text = values["organization"]
+    if assets.get("slug") == "arvind-gcc":
+        footer_text = "Arvind GCC | Build On Legacy, Designed For The Future."
+    footer_row = (
+        f'<tr><td colspan="2" style="padding:10px 18px;text-align:center;background:{BRAND["maroon"]};'
+        'font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:17px;font-weight:700;'
+        f'color:#ffffff;">{escape_html(footer_text)}</td></tr>'
+        if values["organization"]
+        else ""
+    )
+
     return (
-        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" '
-        f'style="width:600px;max-width:600px;border-collapse:collapse;background:#fffff;'
+        f'<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="{signature_width}" '
+        f'style="width:{signature_width}px;max-width:100%;border-collapse:collapse;background:#ffffff;'
         f'font-family:Arial,Helvetica,sans-serif;color:{BRAND["muted"]};">'
-        f'<tr>{logo_panel}<td style="padding:12px 0 12px 28px;vertical-align:middle;'
-        f'border-left:3px solid {BRAND["maroon"]};"><table role="presentation" cellpadding="0" '
-        f'cellspacing="0" border="0" style="border-collapse:collapse;">{detail_rows}'
-        f'<tr><td style="padding-top:10px;"><table role="presentation" cellpadding="0" cellspacing="0" '
-        f'border="0" style="border-collapse:collapse;">{contact_rows}</table></td></tr></table></td></tr>'
-        f'{address_row}{_new_template_managers(values, team, indent=14)}'
-        f'{social_row(assets.get("socials") or [])}</table>'
+        f'<tr><td width="{left_width}" style="width:{left_width}px;padding:18px 0;vertical-align:top;">'
+        f'{left_column}</td>{right_column}</tr>{address_row}{footer_row}</table>'
     )
 
 
@@ -812,6 +841,7 @@ def build_signature_html(
             "logoHref",
             "bannerHref",
             "socials",
+            "slug",
         )
     }
     if template_id == "compact":
@@ -918,11 +948,14 @@ def _png_dimensions(path: Path | None) -> tuple[int, int] | None:
         return None
 
 
-def organization_social_links(slug: str, label: str) -> list[dict]:
+def organization_social_links(slug: str, label: str, website: str) -> list[dict]:
     approved = ORGANIZATION_SOCIAL_LINKS.get(slug, {})
     socials = []
-    for platform in ("facebook", "x", "linkedin", "youtube", "instagram"):
-        href = normalize_https_url(approved.get(platform))
+    for platform in ("facebook", "x", "linkedin", "youtube", "instagram", "website"):
+        href = normalize_https_url(
+            website if platform == "website" else approved.get(platform),
+            add_scheme=platform == "website",
+        )
         settings = SOCIAL_PLATFORM_CONFIG.get(platform) or {}
         icon = normalize_https_url(settings.get("icon"))
         if not href or not icon:
@@ -997,5 +1030,5 @@ def assets_from_org(
         "bannerAlt": f"{label} campaign",
         "logoHref": website_href,
         "bannerHref": banner_href,
-        "socials": organization_social_links(slug, label),
+        "socials": organization_social_links(slug, label, website),
     }

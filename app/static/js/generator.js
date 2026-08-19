@@ -4,16 +4,12 @@
   var MANAGER_L1_KEYS = [
     "managerFirstName",
     "managerLastName",
-    "managerDesignation",
     "managerEmail",
-    "managerPhone",
   ];
   var MANAGER_L2_KEYS = [
     "manager2FirstName",
     "manager2LastName",
-    "manager2Designation",
     "manager2Email",
-    "manager2Phone",
   ];
 
   var DEFAULT_FORM = {
@@ -28,14 +24,10 @@
     address: "",
     managerFirstName: "",
     managerLastName: "",
-    managerDesignation: "",
     managerEmail: "",
-    managerPhone: "",
     manager2FirstName: "",
     manager2LastName: "",
-    manager2Designation: "",
     manager2Email: "",
-    manager2Phone: "",
   };
 
   var PREFILL_KEYS = [
@@ -305,6 +297,10 @@
         var form = data.isDefault
           ? baseFormDefaults()
           : applyPrefillToEmpty(data.form || baseFormDefaults());
+        if (data.isDefault && !form.address) {
+          var defaultOrg = state.orgsBySlug[form.company] || {};
+          form.address = defaultOrg.defaultAddress || "";
+        }
         setFormValues(form);
         if (form.templateId) state.templateId = form.templateId;
         state.managerLevel = state.team === "sales" ? resolveManagerLevel(form) : 0;
@@ -325,6 +321,7 @@
     if (org) {
       fields.organization.value = org.organization;
       fields.website.value = org.website || "";
+      fields.address.value = org.defaultAddress || "";
     }
     lockReadOnlyFields();
     renderPreview();
@@ -466,6 +463,7 @@
     values.organization = DEFAULT_FORM.organization;
     values.website =
       (state.orgsBySlug[DEFAULT_FORM.company] || {}).website || DEFAULT_FORM.website;
+    values.address = (state.orgsBySlug[DEFAULT_FORM.company] || {}).defaultAddress || "";
     MANAGER_L2_KEYS.forEach(function (k) {
       values[k] = "";
     });
@@ -557,14 +555,10 @@
       address: document.getElementById("address"),
       managerFirstName: document.getElementById("managerFirstName"),
       managerLastName: document.getElementById("managerLastName"),
-      managerDesignation: document.getElementById("managerDesignation"),
       managerEmail: document.getElementById("managerEmail"),
-      managerPhone: document.getElementById("managerPhone"),
       manager2FirstName: document.getElementById("manager2FirstName"),
       manager2LastName: document.getElementById("manager2LastName"),
-      manager2Designation: document.getElementById("manager2Designation"),
       manager2Email: document.getElementById("manager2Email"),
-      manager2Phone: document.getElementById("manager2Phone"),
     };
 
     getOrgData().forEach(function (org) {

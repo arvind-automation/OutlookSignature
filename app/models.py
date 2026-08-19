@@ -59,6 +59,7 @@ class Organization(db.Model):
     watermark_path = db.Column(db.String(512), nullable=False)
     logo_bg = db.Column(db.String(32), nullable=False, default="#ffffff")
     logo_width = db.Column(db.Integer, nullable=False, default=230)
+    default_address = db.Column(db.Text, nullable=False, default="")
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=utcnow, onupdate=utcnow)
 
@@ -76,6 +77,7 @@ class Organization(db.Model):
             "watermark": self.watermark_path,
             "logoBg": self.logo_bg,
             "logoWidth": self.logo_width,
+            "defaultAddress": self.default_address or "",
         }
 
 
@@ -133,14 +135,10 @@ class SavedSignature(db.Model):
             "address": self.address or "",
             "managerFirstName": self.manager_first_name or "",
             "managerLastName": self.manager_last_name or "",
-            "managerDesignation": self.manager_designation or "",
             "managerEmail": self.manager_email or "",
-            "managerPhone": self.manager_phone or "",
             "manager2FirstName": self.manager2_first_name or "",
             "manager2LastName": self.manager2_last_name or "",
-            "manager2Designation": self.manager2_designation or "",
             "manager2Email": self.manager2_email or "",
-            "manager2Phone": self.manager2_phone or "",
             "templateId": self.template_id or "standard",
         }
 

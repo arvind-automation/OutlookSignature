@@ -166,14 +166,10 @@ def save_signature():
     saved.address = form.get("address") or ""
     saved.manager_first_name = (form.get("managerFirstName") or "")[:120]
     saved.manager_last_name = (form.get("managerLastName") or "")[:120]
-    saved.manager_designation = (form.get("managerDesignation") or "")[:255]
     saved.manager_email = (form.get("managerEmail") or "")[:255]
-    saved.manager_phone = (form.get("managerPhone") or "")[:64]
     saved.manager2_first_name = (form.get("manager2FirstName") or "")[:120]
     saved.manager2_last_name = (form.get("manager2LastName") or "")[:120]
-    saved.manager2_designation = (form.get("manager2Designation") or "")[:255]
     saved.manager2_email = (form.get("manager2Email") or "")[:255]
-    saved.manager2_phone = (form.get("manager2Phone") or "")[:64]
 
     db.session.commit()
     write_audit(

@@ -135,6 +135,7 @@ def reset_tables(app) -> None:
         db.create_all()
         ensure_manager_columns(app)
         ensure_user_columns(app)
+        ensure_organization_columns(app)
     log.info("Tables recreated.")
 
 
@@ -146,6 +147,7 @@ def create_tables(app) -> None:
         db.create_all()
         ensure_manager_columns(app)
         ensure_user_columns(app)
+        ensure_organization_columns(app)
     log.info("Tables ready.")
 
 
@@ -210,6 +212,32 @@ def ensure_manager_columns(app) -> None:
         db.session.commit()
 
 
+def ensure_organization_columns(app) -> None:
+    """Idempotently add organization defaults on existing databases."""
+    from app.extensions import db
+
+    columns = {
+        "default_address": "TEXT NULL",
+    }
+
+    with app.app_context():
+        existing = {
+            row[0]
+            for row in db.session.execute(
+                text(
+                    "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
+                    "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'organizations'"
+                )
+            ).fetchall()
+        }
+        for name, ddl in columns.items():
+            if name in existing:
+                continue
+            log.info("Adding column organizations.%s", name)
+            db.session.execute(text(f"ALTER TABLE organizations ADD COLUMN {name} {ddl}"))
+        db.session.commit()
+
+
 def seed_organizations(app) -> int:
     from app.extensions import db
     from app.models import Organization
@@ -234,6 +262,7 @@ def seed_organizations(app) -> int:
             org.watermark_path = seed["watermark_path"]
             org.logo_bg = seed["logo_bg"]
             org.logo_width = seed["logo_width"]
+            org.default_address = seed.get("default_address", "")
             updated += 1
         db.session.commit()
     return updated

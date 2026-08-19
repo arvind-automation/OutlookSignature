@@ -13,7 +13,7 @@ GRAPH_ME_SELECT = (
     "businessPhones,companyName,officeLocation,displayName"
 )
 GRAPH_MANAGER_SELECT = (
-    "id,givenName,surname,mail,userPrincipalName,jobTitle,mobilePhone,businessPhones"
+    "id,givenName,surname,mail,userPrincipalName"
 )
 GRAPH_USERS_URL = "https://graph.microsoft.com/v1.0/users"
 
@@ -130,9 +130,7 @@ def _map_person_to_manager_fields(person: dict[str, Any] | None) -> dict[str, st
     return {
         "managerFirstName": first,
         "managerLastName": last,
-        "managerDesignation": (person.get("jobTitle") or "").strip() if person else "",
         "managerEmail": _graph_email(person),
-        "managerPhone": _graph_phone(person),
     }
 
 
@@ -141,9 +139,7 @@ def _map_person_to_manager2_fields(person: dict[str, Any] | None) -> dict[str, s
     return {
         "manager2FirstName": first,
         "manager2LastName": last,
-        "manager2Designation": (person.get("jobTitle") or "").strip() if person else "",
         "manager2Email": _graph_email(person),
-        "manager2Phone": _graph_phone(person),
     }
 
 
