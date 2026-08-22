@@ -1,6 +1,8 @@
 (function () {
   "use strict";
 
+  var LOCKED_COMPANY = "arvind-gcc";
+
   var MANAGER_L1_KEYS = [
     "managerFirstName",
     "managerLastName",
@@ -13,13 +15,13 @@
   ];
 
   var DEFAULT_FORM = {
-    company: "arvind-limited",
+    company: LOCKED_COMPANY,
     firstName: "",
     lastName: "",
     email: "",
     designation: "",
     phone: "",
-    organization: "Arvind Limited",
+    organization: "Arvind GCC",
     website: "www.arvind.com",
     address: "",
     managerFirstName: "",
@@ -162,6 +164,9 @@
         values[k] = "";
       });
     }
+    // Organization selection is intentionally locked to Arvind GCC. Keep this
+    // assignment here so even modified browser controls cannot change the API payload.
+    values.company = LOCKED_COMPANY;
     return values;
   }
 
@@ -181,7 +186,7 @@
         fields[key].readOnly = true;
       }
     });
-    if (fields.company) fields.company.disabled = false;
+    if (fields.company) fields.company.disabled = true;
     if (fields.address) fields.address.disabled = false;
   }
 
@@ -298,7 +303,10 @@
         var form = data.isDefault
           ? baseFormDefaults()
           : applyPrefillToEmpty(savedForm || baseFormDefaults());
-        var defaultOrg = state.orgsBySlug[form.company] || {};
+        form.company = LOCKED_COMPANY;
+        var defaultOrg = state.orgsBySlug[LOCKED_COMPANY] || {};
+        form.organization = defaultOrg.organization || DEFAULT_FORM.organization;
+        form.website = defaultOrg.website || DEFAULT_FORM.website;
         var hasSavedAddress = !!(savedForm.address || "").trim();
         if (defaultOrg.defaultAddress && (data.isDefault || !hasSavedAddress)) {
           form.address = defaultOrg.defaultAddress;
@@ -315,19 +323,6 @@
         renderTemplateSelection();
         return renderPreview();
       });
-  }
-
-  function handleCompanyChange() {
-    var slug = fields.company.value;
-    var org = state.orgsBySlug[slug];
-    if (org) {
-      fields.organization.value = org.organization;
-      fields.website.value = org.website || "";
-      fields.address.value = org.defaultAddress || "";
-    }
-    lockReadOnlyFields();
-    renderPreview();
-    scheduleSave();
   }
 
   function fallbackCopy(text) {
@@ -504,7 +499,6 @@
       fields[key].addEventListener("input", onFormInput);
       fields[key].addEventListener("change", onFormInput);
     });
-    fields.company.addEventListener("change", handleCompanyChange);
     if (els.addManagerL2Btn) {
       els.addManagerL2Btn.addEventListener("click", handleAddManagerL2);
     }

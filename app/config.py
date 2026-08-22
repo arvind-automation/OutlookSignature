@@ -37,11 +37,7 @@ class Config:
     ALLOWED_TEMPLATES = frozenset(
         {
             "standard",
-            "compact",
-            "minimal",
-            "logo-header",
             "logo-sidebar",
-            "logo-profile",
         }
     )
     APP_BASE_URL = (os.getenv("APP_BASE_URL") or "http://localhost:5000").rstrip("/")
@@ -62,4 +58,3 @@ class Config:
         and env_flag("LOCAL_DEV_LOGIN_ENABLED")
     )
     LOCAL_DEV_EMAIL = (os.getenv("LOCAL_DEV_EMAIL") or "local.user@arvind.in").strip().lower()
-

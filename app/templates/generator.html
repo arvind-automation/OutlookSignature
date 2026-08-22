@@ -35,11 +35,8 @@
       <form id="signature-form" autocomplete="off">
         <div class="field">
           <label for="company">Organization</label>
-          <select id="company" name="company" required>
-            <option value="">Select organization</option>
-            {% for org in organizations %}
-            <option value="{{ org.slug }}">{{ org.label }}</option>
-            {% endfor %}
+          <select id="company" name="company" required disabled>
+            <option value="arvind-gcc" selected>Arvind GCC</option>
           </select>
         </div>
 

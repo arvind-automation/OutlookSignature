@@ -29,14 +29,18 @@ TEMPLATES = [
         "description": "Details, logo, social links and approved campaign banner",
     },
     {
-        "id": "compact",
-        "name": "Compact",
-        "description": "Details, logo and social links without a banner",
-    },
-    {
         "id": "logo-sidebar",
         "name": "Logo Sidebar",
         "description": "Profile heading with logo, contacts and social links",
+    },
+]
+
+# Retained for future reactivation; intentionally excluded from the active UI/API catalog.
+ARCHIVED_TEMPLATES = [
+    {
+        "id": "compact",
+        "name": "Compact",
+        "description": "Details, logo and social links without a banner",
     },
     {
         "id": "minimal",
@@ -56,13 +60,13 @@ TEMPLATES = [
 ]
 
 DEFAULT_FORM = {
-    "company": "arvind-limited",
+    "company": "arvind-gcc",
     "firstName": "",
     "lastName": "",
     "email": "",
     "designation": "",
     "phone": "",
-    "organization": "Arvind Limited",
+    "organization": "Arvind GCC",
     "website": "www.arvind.com",
     "address": "",
     "managerFirstName": "",
@@ -515,8 +519,8 @@ def social_row(socials: list[dict], *, indent: int = 0, tagline: str = "") -> st
         return ""
     tagline_cell = (
         f'<td width="100%" style="width:100%;padding:0 8px 0 12px;vertical-align:middle;'
-        'font-family:Georgia,serif;font-size:11px;line-height:15px;font-weight:700;'
-        f'font-style:italic;text-align:center;color:{BRAND["maroon"]};white-space:normal;">'
+        'font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:15px;font-weight:700;'
+        f'text-align:center;color:{BRAND["maroon"]};white-space:normal;">'
         f'{escape_html(tagline)}</td>'
         if tagline
         else ""

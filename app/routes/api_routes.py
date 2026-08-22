@@ -8,6 +8,12 @@ from app.models import Organization, SavedSignature
 from app.signatures import DEFAULT_FORM, build_signature_html, assets_from_org
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
+LOCKED_ORGANIZATION_SLUG = "arvind-gcc"
+
+
+def _locked_organization():
+    """Return the sole active organization without trusting client input."""
+    return Organization.query.filter_by(slug=LOCKED_ORGANIZATION_SLUG).first()
 
 
 def _request_public_asset_origin(candidate: str = "") -> str:
@@ -41,7 +47,7 @@ def list_organizations():
     user, err = _require_api_user()
     if err:
         return err
-    orgs = Organization.query.order_by(Organization.id.asc()).all()
+    orgs = Organization.query.filter_by(slug=LOCKED_ORGANIZATION_SLUG).all()
     return jsonify({"organizations": [o.to_dict() for o in orgs]})
 
 
@@ -52,7 +58,8 @@ def preview():
         return err
 
     payload = request.get_json(silent=True) or {}
-    form = payload.get("form") or {}
+    form = dict(payload.get("form") or {})
+    form["company"] = LOCKED_ORGANIZATION_SLUG
     template_id = (payload.get("templateId") or "standard").strip()
     if template_id not in current_app.config["ALLOWED_TEMPLATES"]:
         template_id = "standard"
@@ -61,8 +68,8 @@ def preview():
     # client state supplied with the preview request.
     team = _session_team(user)
 
-    company = (form.get("company") or "").strip()
-    org = Organization.query.filter_by(slug=company).first() if company else None
+    company = LOCKED_ORGANIZATION_SLUG
+    org = _locked_organization()
 
     if not org:
         return jsonify(
@@ -128,9 +135,9 @@ def get_signature():
             defaults["lastName"] = user.last_name
         return jsonify({"form": defaults, "isDefault": True, "team": _session_team(user)})
 
-    return jsonify(
-        {"form": saved.to_form_dict(), "isDefault": False, "team": _session_team(user)}
-    )
+    form = saved.to_form_dict()
+    form["company"] = LOCKED_ORGANIZATION_SLUG
+    return jsonify({"form": form, "isDefault": False, "team": _session_team(user)})
 
 
 @api_bp.post("/signature")
@@ -140,13 +147,14 @@ def save_signature():
         return err
 
     payload = request.get_json(silent=True) or {}
-    form = payload.get("form") or {}
+    form = dict(payload.get("form") or {})
+    form["company"] = LOCKED_ORGANIZATION_SLUG
     template_id = (payload.get("templateId") or form.get("templateId") or "standard").strip()
     if template_id not in current_app.config["ALLOWED_TEMPLATES"]:
         template_id = "standard"
 
-    company = (form.get("company") or "").strip()
-    org = Organization.query.filter_by(slug=company).first() if company else None
+    company = LOCKED_ORGANIZATION_SLUG
+    org = _locked_organization()
 
     saved = SavedSignature.query.filter_by(user_id=user.id).first()
     if saved is None:

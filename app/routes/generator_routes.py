@@ -5,6 +5,9 @@ from app.config import Config
 from app.models import Organization
 from app.signatures import DEFAULT_FORM, TEMPLATES
 
+
+LOCKED_ORGANIZATION_SLUG = "arvind-gcc"
+
 generator_bp = Blueprint("generator", __name__)
 
 
@@ -19,7 +22,7 @@ def generator():
         return redirect(url_for("auth.team"))
 
     session["team"] = team
-    orgs = Organization.query.order_by(Organization.id.asc()).all()
+    orgs = Organization.query.filter_by(slug=LOCKED_ORGANIZATION_SLUG).all()
     team_label = Config.TEAM_LABELS.get(team, team)
     profile_prefill = session.get("profile_prefill") or {}
 
