@@ -7,25 +7,36 @@
     <img src="{{ url_for('static', filename='assets/arvind-gcc-logo-transparent.png') }}" alt="Arvind GCC" />
   </a>
   <div class="auth-card auth-card--wide">
+    <button type="button" id="grade-reference-open" class="grade-reference-trigger" aria-haspopup="dialog" aria-controls="grade-reference-modal">Know your grade <span aria-hidden="true">i</span></button>
     <div class="auth-brand auth-brand--center">
       <div><p class="auth-eyebrow">Signature access</p><h1>Select Your Grade</h1><p>Welcome, {{ user.first_name or user.email }}</p></div>
     </div>
     <form id="grade-form" method="post" action="{{ url_for('auth.grade') }}">
       <div class="field grade-picker">
         <label for="grade-search">Current grade</label>
-        <input type="hidden" id="grade" name="grade" value="{{ user.grade or '' }}" required />
-        <input id="grade-search" type="search" autocomplete="off" placeholder="Search or select your current grade" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="grade-options" aria-activedescendant="" value="{{ user.grade or '' }}" />
+        <input type="hidden" id="grade" name="grade" value="" required />
+        <div class="grade-picker__controls">
+          <input id="grade-search" type="search" autocomplete="off" placeholder="Search grades" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="grade-options" aria-activedescendant="" value="" />
+          <button type="button" id="grade-options-toggle" class="grade-picker__toggle" aria-label="Show all grades" aria-controls="grade-options" aria-expanded="false">⌄</button>
+        </div>
         <ul id="grade-options" class="grade-picker__options" role="listbox" hidden>
           {% for grade in grades %}
-          <li role="option" id="grade-option-{{ loop.index }}" data-grade="{{ grade }}" aria-selected="{{ 'true' if grade == user.grade else 'false' }}">{{ grade }}</li>
+          <li role="option" id="grade-option-{{ loop.index }}" data-grade="{{ grade.code }}" data-label="{{ grade.code }} — {{ grade.designation }}" aria-selected="false"><strong>{{ grade.code }}</strong><span>{{ grade.designation }}</span></li>
           {% endfor %}
           <li id="grade-no-results" class="grade-picker__empty" role="status" hidden>No matching grades.</li>
         </ul>
       </div>
-      <p class="grade-note">Please make sure to select a your current grade as per the agreement.</p>
+      <p class="grade-note">Please make sure to select your current grade</p>
       <button type="submit" class="btn btn-primary btn-block">Continue</button>
     </form>
     <form method="post" action="{{ url_for('auth.logout') }}"><button type="submit" class="btn btn-ghost btn-block">Sign Out</button></form>
+  </div>
+</div>
+<div id="grade-reference-modal" class="grade-modal" hidden role="dialog" aria-modal="true" aria-labelledby="grade-reference-title">
+  <div class="grade-modal__card grade-reference-modal__card">
+    <div class="grade-reference-modal__header"><h2 id="grade-reference-title">Know your grade</h2><button type="button" id="grade-reference-close" class="grade-reference-close" aria-label="Close grade reference">×</button></div>
+    <p class="grade-reference-modal__hint">Choose any row to apply its Arvind GCC grade.</p>
+    <div class="grade-reference-table-wrap"><table class="grade-reference-table"><thead><tr class="grade-reference-table__groups"><th colspan="2">Arvind, Anup &amp; SmartSpaces — Current State</th><th class="grade-reference-table__spacer" aria-hidden="true"></th><th colspan="2">Arvind GCC</th></tr><tr><th>Current Grade</th><th>Designation</th><th class="grade-reference-table__spacer" aria-hidden="true"></th><th>New Grades</th><th>Designation</th></tr></thead><tbody>{% for row in grade_reference_rows %}<tr class="grade-reference-row" tabindex="0" role="button" data-grade="{{ row.newGrade }}" data-label="{{ row.newGrade }} — {{ row.designation }}" aria-label="Select {{ row.newGrade }}, {{ row.designation }}"><td>{{ row.currentGrades }}</td><td>{{ row.designation }}</td><td class="grade-reference-row__arrow" aria-hidden="true">→</td><td><strong>{{ row.newGrade }}</strong></td><td>{{ row.designation }}</td></tr>{% endfor %}</tbody></table></div>
   </div>
 </div>
 <div id="grade-confirm-modal" class="grade-modal" hidden role="dialog" aria-modal="true" aria-labelledby="grade-confirm-title">

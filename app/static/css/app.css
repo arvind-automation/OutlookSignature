@@ -61,6 +61,10 @@
 @keyframes grade-notice-countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
 .grade-picker { position: relative; }
+.grade-picker__controls { display: flex; gap: 8px; }
+.grade-picker__controls input { min-width: 0; flex: 1; }
+.grade-picker__toggle { width: 42px; border: 1px solid var(--panel-border); border-radius: 9px; background: var(--panel); color: var(--text); font: inherit; font-size: 1.3rem; line-height: 1; cursor: pointer; }
+.grade-picker__toggle:hover, .grade-picker__toggle[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); }
 .grade-picker__options {
   position: absolute;
   z-index: 10;
@@ -78,8 +82,36 @@
   list-style: none;
 }
 .grade-picker__options [role="option"], .grade-picker__empty { padding: 9px 11px; border-radius: 7px; cursor: pointer; }
+.grade-picker__options [role="option"] { display: flex; flex-direction: column; gap: 2px; }
+.grade-picker__options [role="option"] span { color: var(--muted); font-size: .82rem; }
 .grade-picker__options [role="option"]:hover, .grade-picker__options [role="option"].is-active { background: var(--surface-hover); color: var(--accent); }
 .grade-picker__empty { color: var(--muted); cursor: default; }
+.grade-reference-trigger { position: absolute; top: 16px; right: 18px; border: 0; background: transparent; color: var(--accent); font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer; }
+.grade-reference-trigger span { display: inline-grid; width: 17px; height: 17px; place-items: center; margin-left: 4px; border: 1px solid currentColor; border-radius: 50%; font-size: .68rem; font-style: italic; }
+.grade-reference-modal__card { width: min(100%, 1000px); max-height: min(82vh, 720px); overflow: auto; border: 1px solid rgba(255, 255, 255, .72); background: linear-gradient(135deg, rgba(255, 255, 255, .86), rgba(253, 241, 245, .72)); box-shadow: 0 24px 64px rgba(59, 14, 30, .30), inset 0 1px 0 rgba(255, 255, 255, .94); backdrop-filter: blur(18px); }
+.grade-reference-modal__header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.grade-reference-modal__hint { margin: 0; color: var(--muted); font-size: .88rem; }
+.grade-reference-close { width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--surface-muted); color: var(--text); font-size: 1.4rem; cursor: pointer; }
+.grade-reference-table-wrap { overflow-x: auto; margin-top: 16px; }
+.grade-reference-table-wrap table { width: 100%; min-width: 850px; border-collapse: separate; border-spacing: 0 7px; font-size: .84rem; text-align: left; }
+.grade-reference-table th { padding: 10px 12px; color: var(--accent); font-weight: 700; }
+.grade-reference-table__groups th { padding: 12px; background: rgba(139, 21, 56, .10); border-top: 1px solid rgba(139, 21, 56, .18); border-bottom: 1px solid rgba(139, 21, 56, .12); text-align: center; }
+.grade-reference-table__groups .grade-reference-table__spacer { background: transparent; border: 0; }
+.grade-reference-table__spacer { width: 54px; padding-inline: 0 !important; }
+.grade-reference-table__groups th:first-child { border-radius: 10px 0 0 10px; }
+.grade-reference-table__groups th:last-child { border-radius: 0 10px 10px 0; }
+.grade-reference-row { cursor: pointer; outline: none; transition: transform .16s ease, box-shadow .16s ease; }
+.grade-reference-row td { padding: 12px; border-top: 1px solid rgba(255, 255, 255, .95); border-bottom: 1px solid rgba(139, 21, 56, .12); background: rgba(255, 255, 255, .58); vertical-align: middle; }
+.grade-reference-row td:first-child { border-left: 1px solid rgba(139, 21, 56, .12); border-radius: 10px 0 0 10px; }
+.grade-reference-row td:last-child { border-right: 1px solid rgba(139, 21, 56, .12); border-radius: 0 10px 10px 0; }
+.grade-reference-row:hover, .grade-reference-row:focus { transform: translateY(-2px); box-shadow: 0 9px 18px rgba(91, 22, 47, .14); }
+.grade-reference-row:hover td, .grade-reference-row:focus td { background: rgba(255, 255, 255, .92); border-color: rgba(139, 21, 56, .36); }
+.grade-reference-row__arrow { color: var(--accent); text-align: center; font-size: 1.15rem; font-weight: 800; }
+
+.product-name {
+  font-family: "Red Hat Display", Arial, sans-serif !important;
+  color: #000000 !important;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .grade-notice__timer { animation: none; width: 0; }

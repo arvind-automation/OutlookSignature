@@ -10,7 +10,7 @@ from app.auth import (
     write_audit,
 )
 from app.config import Config
-from app.grades import get_all_grades, get_grade_config
+from app.grades import get_grade_config, get_grade_reference_rows, get_selectable_grade_options
 from app.microsoft_sso import (
     build_auth_url,
     claims_email,
@@ -172,7 +172,7 @@ def grade():
         selected_grade = (request.form.get("grade") or "").strip().upper()
         if not get_grade_config(selected_grade):
             flash("Select a valid current grade.", "error")
-            return render_template("grade.html", user=user, grades=get_all_grades())
+            return render_template("grade.html", user=user, grades=get_selectable_grade_options(), grade_reference_rows=get_grade_reference_rows())
         previous_grade = user.grade
         user.grade = selected_grade
         from app.extensions import db
@@ -187,7 +187,7 @@ def grade():
 
     if get_grade_config(user.grade) and request.args.get("change") != "1":
         return redirect(url_for("generator.generator"))
-    return render_template("grade.html", user=user, grades=get_all_grades())
+    return render_template("grade.html", user=user, grades=get_selectable_grade_options(), grade_reference_rows=get_grade_reference_rows())
 
 
 @auth_bp.route("/team", methods=["GET", "POST"])
