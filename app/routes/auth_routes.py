@@ -7,10 +7,10 @@ from app.auth import (
     is_admin,
     login_user_session,
     logout_user_session,
-    set_team,
     write_audit,
 )
 from app.config import Config
+from app.grades import get_all_grades, get_grade_config
 from app.microsoft_sso import (
     build_auth_url,
     claims_email,
@@ -29,8 +29,8 @@ def index():
     user = current_user()
     if not user:
         return redirect(url_for("auth.login"))
-    if not session.get("team"):
-        return redirect(url_for("auth.team"))
+    if not get_grade_config(user.grade):
+        return redirect(url_for("auth.grade"))
     return redirect(url_for("generator.generator"))
 
 
@@ -38,9 +38,9 @@ def index():
 def login():
     user = current_user()
     if user:
-        if session.get("team"):
+        if get_grade_config(user.grade):
             return redirect(url_for("generator.generator"))
-        return redirect(url_for("auth.team"))
+        return redirect(url_for("auth.grade"))
 
     return render_template(
         "login.html",
@@ -58,7 +58,7 @@ def local_login():
     if not user:
         user = get_or_create_local_user(current_app.config["LOCAL_DEV_EMAIL"])
         login_user_session(user)
-    return redirect(url_for("auth.team"))
+    return redirect(url_for("auth.grade"))
 
 
 @auth_bp.route("/auth/microsoft")
@@ -68,7 +68,7 @@ def microsoft_login():
         return redirect(url_for("auth.login"))
 
     if current_user():
-        return redirect(url_for("auth.team"))
+        return redirect(url_for("auth.grade"))
 
     state = new_oauth_state()
     session["ms_oauth_state"] = state
@@ -159,34 +159,41 @@ def microsoft_callback():
     if prefill:
         # Must set after login_user_session (which clears the session).
         session["profile_prefill"] = prefill
-    return redirect(url_for("auth.team"))
+    return redirect(url_for("auth.grade"))
 
 
-@auth_bp.route("/team", methods=["GET", "POST"])
-def team():
+@auth_bp.route("/grade", methods=["GET", "POST"])
+def grade():
     user = current_user()
     if not user:
         return redirect(url_for("auth.login"))
 
     if request.method == "POST":
-        team_id = request.form.get("team") or ""
-        ok, err = set_team(user, team_id)
-        if not ok:
-            flash(err, "error")
-            return render_template(
-                "team.html",
-                user_email=user.email,
-                team_labels=Config.TEAM_LABELS,
-                is_admin=is_admin(user),
-            )
+        selected_grade = (request.form.get("grade") or "").strip().upper()
+        if not get_grade_config(selected_grade):
+            flash("Select a valid current grade.", "error")
+            return render_template("grade.html", user=user, grades=get_all_grades())
+        previous_grade = user.grade
+        user.grade = selected_grade
+        from app.extensions import db
+
+        db.session.commit()
+        write_audit(
+            "grade_changed" if previous_grade else "grade_selected",
+            user_id=user.id,
+            details={"grade": selected_grade},
+        )
         return redirect(url_for("generator.generator"))
 
-    return render_template(
-        "team.html",
-        user_email=user.email,
-        team_labels=Config.TEAM_LABELS,
-        is_admin=is_admin(user),
-    )
+    if get_grade_config(user.grade) and request.args.get("change") != "1":
+        return redirect(url_for("generator.generator"))
+    return render_template("grade.html", user=user, grades=get_all_grades())
+
+
+@auth_bp.route("/team", methods=["GET", "POST"])
+def team():
+    """Legacy URL retained only as a safe redirect; it no longer selects access."""
+    return redirect(url_for("auth.grade"), code=303)
 
 
 @auth_bp.route("/logout", methods=["POST", "GET"])

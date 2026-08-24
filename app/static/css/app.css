@@ -27,6 +27,64 @@
   --surface-muted: rgba(31, 26, 23, 0.04);
 }
 
+.grade-note {
+  margin: 12px 0 18px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.grade-modal[hidden], .grade-notice[hidden] { display: none; }
+.grade-modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(31, 26, 23, .42); }
+.grade-modal__card { width: min(100%, 430px); padding: 28px; border-radius: 16px; background: #fff; box-shadow: var(--shadow); }
+.grade-modal__card h2 { margin: 0 0 10px; }
+.grade-modal__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+.grade-notice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 680px;
+  margin: 16px auto 0;
+  padding: 17px 18px 15px;
+  overflow: hidden;
+  border: 1px solid rgba(139, 21, 56, .38);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(76, 27, 42, .16), inset 0 1px 0 rgba(255, 255, 255, .8);
+  color: var(--text);
+  font-size: .92rem;
+}
+.grade-notice__timer { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--accent); transform-origin: left center; animation: grade-notice-countdown 5s linear forwards; }
+.grade-notice a { color: var(--accent); font-weight: 700; text-decoration: none; white-space: nowrap; }
+
+@keyframes grade-notice-countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+.grade-picker { position: relative; }
+.grade-picker__options {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 5px);
+  right: 0;
+  left: 0;
+  max-height: 220px;
+  margin: 0;
+  padding: 5px;
+  overflow-y: auto;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: var(--shadow-soft);
+  list-style: none;
+}
+.grade-picker__options [role="option"], .grade-picker__empty { padding: 9px 11px; border-radius: 7px; cursor: pointer; }
+.grade-picker__options [role="option"]:hover, .grade-picker__options [role="option"].is-active { background: var(--surface-hover); color: var(--accent); }
+.grade-picker__empty { color: var(--muted); cursor: default; }
+
+@media (prefers-reduced-motion: reduce) {
+  .grade-notice__timer { animation: none; width: 0; }
+}
+
 html,
 body {
   margin: 0;

@@ -1,7 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Signature Generator{% endblock %}
+{% block title %}MyArvind Signature{% endblock %}
 {% block body %}
 <div id="generator-view" class="app">
+  <div id="grade-notice" class="grade-notice" role="status">
+    <span class="grade-notice__timer" aria-hidden="true"></span>
+    <span>Hi, {{ user_name }}. Your current grade is <strong>{{ grade }}</strong>{% if new_grade %} ({{ new_grade }}){% endif %}.</span>
+    <a href="{{ url_for('auth.grade', change=1) }}">Change Grade</a>
+  </div>
   <header class="app-header">
     <img
       class="brand-logo brand-logo--header"
@@ -9,7 +14,7 @@
       alt="Arvind GCC"
     />
     <div class="app-header__content">
-      <h1>Signature Generator</h1>
+      <h1>MyArvind Signature</h1>
       <p>Create your branded email signature and copy it into Outlook, Gmail, or Zoho Mail.</p>
     </div>
     <div class="app-header__meta">
@@ -18,7 +23,6 @@
       {% if is_admin %}
       <a href="{{ url_for('admin.overview') }}" class="btn btn-primary">Admin</a>
       {% endif %}
-      <a href="{{ url_for('auth.team') }}" class="btn btn-tint">Change Template</a>
       <form method="post" action="{{ url_for('auth.logout') }}" style="display:inline;">
         <button type="submit" id="logout-btn" class="btn btn-ghost">Sign Out</button>
       </form>
@@ -97,7 +101,7 @@
 
         <div id="manager-section" class="manager-section"{% if team != 'sales' %} hidden{% endif %}>
           <h3 class="manager-section__title">Manager details</h3>
-          <p class="manager-section__hint">Level 1 manager is filled from your Microsoft account. Add Level 2 when needed.</p>
+          <p class="manager-section__hint">Level 1 manager is filled from your Microsoft account.</p>
 
           <div id="manager-level1" class="manager-level"{% if team != 'sales' %} hidden{% endif %}>
             <div class="manager-level__header">
@@ -119,28 +123,6 @@
             </div>
           </div>
 
-          <div id="manager-level2" class="manager-level" hidden>
-            <div class="manager-level__header">
-              <h4 class="manager-level__title">Level 2 Manager</h4>
-              <button type="button" id="remove-manager-l2" class="btn btn-ghost">Remove</button>
-            </div>
-            <div class="field-row">
-              <div class="field">
-                <label for="manager2FirstName">First Name</label>
-                <input type="text" id="manager2FirstName" name="manager2FirstName" placeholder="Manager first name" />
-              </div>
-              <div class="field">
-                <label for="manager2LastName">Last Name</label>
-                <input type="text" id="manager2LastName" name="manager2LastName" placeholder="Manager last name" />
-              </div>
-            </div>
-            <div class="field">
-              <label for="manager2Email">Email</label>
-              <input type="email" id="manager2Email" name="manager2Email" placeholder="manager@arvind.in" />
-            </div>
-          </div>
-
-          <button type="button" id="add-manager-l2-btn" class="btn btn-primary btn-block">Add Level 2 Manager</button>
         </div>
       </form>
     </aside>
@@ -194,7 +176,8 @@
   window.__SIG_BOOT__ = {
     userEmail: {{ user_email|tojson }},
     team: {{ team|tojson }},
-    prefill: {{ profile_prefill|tojson }}
+    prefill: {{ profile_prefill|tojson }},
+    grade: {{ grade|tojson }}
   };
 </script>
 <script id="org-data" type="application/json">
@@ -205,4 +188,10 @@
 ]
 </script>
 <script src="{{ url_for('static', filename='js/generator.js') }}" defer></script>
+<script>
+  window.setTimeout(function () {
+    var notice = document.getElementById('grade-notice');
+    if (notice) notice.hidden = true;
+  }, 5000);
+</script>
 {% endblock %}

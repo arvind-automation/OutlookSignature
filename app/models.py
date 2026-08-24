@@ -17,6 +17,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     first_name = db.Column(db.String(120), nullable=True)
     last_name = db.Column(db.String(120), nullable=True)
+    grade = db.Column(db.String(32), nullable=True)
     team = db.Column(db.String(32), nullable=True)
     is_admin = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
@@ -42,6 +43,7 @@ class User(db.Model):
             "email": self.email,
             "first_name": self.first_name or "",
             "last_name": self.last_name or "",
+            "grade": self.grade or "",
             "team": self.team or "",
         }
 
@@ -136,9 +138,6 @@ class SavedSignature(db.Model):
             "managerFirstName": self.manager_first_name or "",
             "managerLastName": self.manager_last_name or "",
             "managerEmail": self.manager_email or "",
-            "manager2FirstName": self.manager2_first_name or "",
-            "manager2LastName": self.manager2_last_name or "",
-            "manager2Email": self.manager2_email or "",
             "templateId": self.template_id or "standard",
         }
 

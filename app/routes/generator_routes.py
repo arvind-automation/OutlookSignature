@@ -2,6 +2,7 @@ from flask import Blueprint, redirect, render_template, session, url_for
 
 from app.auth import current_user, is_admin
 from app.config import Config
+from app.grades import get_allowed_team, get_new_grade
 from app.models import Organization
 from app.signatures import DEFAULT_FORM, TEMPLATES
 
@@ -17,11 +18,10 @@ def generator():
     if not user:
         return redirect(url_for("auth.login"))
 
-    team = session.get("team") or user.team
+    team = get_allowed_team(user.grade)
     if not team:
-        return redirect(url_for("auth.team"))
+        return redirect(url_for("auth.grade"))
 
-    session["team"] = team
     orgs = Organization.query.filter_by(slug=LOCKED_ORGANIZATION_SLUG).all()
     team_label = Config.TEAM_LABELS.get(team, team)
     profile_prefill = session.get("profile_prefill") or {}
@@ -36,4 +36,7 @@ def generator():
         defaults=DEFAULT_FORM,
         is_admin=is_admin(user),
         profile_prefill=profile_prefill,
+        grade=user.grade,
+        new_grade=get_new_grade(user.grade),
+        user_name=" ".join(part for part in (user.first_name, user.last_name) if part) or user.email,
     )

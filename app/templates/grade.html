@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Select Grade — MyArvind Signature{% endblock %}
+{% block body %}
+<div class="auth-view">
+  <img class="auth-wave" src="{{ url_for('static', filename='assets/auth-wave.svg') }}" alt="" aria-hidden="true" />
+  <a class="auth-logo-corner" href="{{ url_for('auth.grade') }}">
+    <img src="{{ url_for('static', filename='assets/arvind-gcc-logo-transparent.png') }}" alt="Arvind GCC" />
+  </a>
+  <div class="auth-card auth-card--wide">
+    <div class="auth-brand auth-brand--center">
+      <div><p class="auth-eyebrow">Signature access</p><h1>Select Your Grade</h1><p>Welcome, {{ user.first_name or user.email }}</p></div>
+    </div>
+    <form id="grade-form" method="post" action="{{ url_for('auth.grade') }}">
+      <div class="field grade-picker">
+        <label for="grade-search">Current grade</label>
+        <input type="hidden" id="grade" name="grade" value="{{ user.grade or '' }}" required />
+        <input id="grade-search" type="search" autocomplete="off" placeholder="Search or select your current grade" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="grade-options" aria-activedescendant="" value="{{ user.grade or '' }}" />
+        <ul id="grade-options" class="grade-picker__options" role="listbox" hidden>
+          {% for grade in grades %}
+          <li role="option" id="grade-option-{{ loop.index }}" data-grade="{{ grade }}" aria-selected="{{ 'true' if grade == user.grade else 'false' }}">{{ grade }}</li>
+          {% endfor %}
+          <li id="grade-no-results" class="grade-picker__empty" role="status" hidden>No matching grades.</li>
+        </ul>
+      </div>
+      <p class="grade-note">Please make sure to select a your current grade as per the agreement.</p>
+      <button type="submit" class="btn btn-primary btn-block">Continue</button>
+    </form>
+    <form method="post" action="{{ url_for('auth.logout') }}"><button type="submit" class="btn btn-ghost btn-block">Sign Out</button></form>
+  </div>
+</div>
+<div id="grade-confirm-modal" class="grade-modal" hidden role="dialog" aria-modal="true" aria-labelledby="grade-confirm-title">
+  <div class="grade-modal__card"><h2 id="grade-confirm-title">Are you sure?</h2><p id="grade-confirm-message"></p><div class="grade-modal__actions"><button type="button" id="grade-cancel" class="btn btn-ghost">Cancel</button><button type="button" id="grade-confirm" class="btn btn-primary">Confirm</button></div></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/grade-selector.js') }}" defer></script>
+{% endblock %}

@@ -157,6 +157,7 @@ def ensure_user_columns(app) -> None:
 
     columns = {
         "is_admin": "TINYINT(1) NOT NULL DEFAULT 0",
+        "grade": "VARCHAR(32) NULL",
     }
 
     with app.app_context():

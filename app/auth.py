@@ -121,8 +121,6 @@ def login_user_session(user: User) -> None:
     session.clear()
     session["user_id"] = user.id
     session["user_email"] = user.email
-    # Team must be chosen explicitly after each login.
-    session["team"] = ""
     session.permanent = True
 
 

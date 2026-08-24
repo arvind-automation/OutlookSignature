@@ -17,6 +17,10 @@ GRAPH_MANAGER_SELECT = (
 )
 GRAPH_USERS_URL = "https://graph.microsoft.com/v1.0/users"
 
+# Archived feature: retain the Level 2 Graph mapping for a future hierarchy
+# reactivation, but do not fetch or expose it in the live generator.
+ARCHIVED_L2_MANAGER_PREFILL_ENABLED = False
+
 
 def microsoft_sso_enabled() -> bool:
     return bool(current_app.config.get("MICROSOFT_SSO_ENABLED"))
@@ -135,6 +139,7 @@ def _map_person_to_manager_fields(person: dict[str, Any] | None) -> dict[str, st
 
 
 def _map_person_to_manager2_fields(person: dict[str, Any] | None) -> dict[str, str]:
+    """Archived Level 2 manager mapping retained for future reactivation."""
     first, last = _graph_names(person)
     return {
         "manager2FirstName": first,
@@ -188,7 +193,7 @@ def _fetch_user_manager(
 
 
 def fetch_graph_profile(access_token: str) -> dict[str, str]:
-    """Fetch /me (+ optional L1/L2 managers) and map to generator form prefill keys."""
+    """Fetch /me and the active Level 1 manager prefill fields."""
     if not access_token:
         return {}
 
@@ -243,7 +248,7 @@ def fetch_graph_profile(access_token: str) -> dict[str, str]:
         current_app.logger.exception("Graph /me/manager request failed")
 
     l1_id = (l1.get("id") or "").strip() if l1 else ""
-    if l1_id:
+    if ARCHIVED_L2_MANAGER_PREFILL_ENABLED and l1_id:
         l2 = _fetch_user_manager(
             headers,
             l1_id,

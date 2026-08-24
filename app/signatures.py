@@ -59,6 +59,18 @@ ARCHIVED_TEMPLATES = [
     },
 ]
 
+# Retained backend metadata for features that are deliberately unavailable in
+# the active generator. The associated database columns and Graph mapping stay
+# intact so the feature can be restored without a data migration.
+ARCHIVED_HIERARCHY_FEATURES = [
+    {
+        "id": "level-2-manager",
+        "name": "Level 2 Manager",
+        "fields": ("manager2FirstName", "manager2LastName", "manager2Email"),
+        "status": "archived",
+    }
+]
+
 DEFAULT_FORM = {
     "company": "arvind-gcc",
     "firstName": "",
@@ -67,14 +79,11 @@ DEFAULT_FORM = {
     "designation": "",
     "phone": "",
     "organization": "Arvind GCC",
-    "website": "www.arvind.com",
+    "website": "arvindgcc.com",
     "address": "",
     "managerFirstName": "",
     "managerLastName": "",
     "managerEmail": "",
-    "manager2FirstName": "",
-    "manager2LastName": "",
-    "manager2Email": "",
 }
 
 # Canonical organization assets. Paths are always backend-controlled and are
@@ -132,7 +141,7 @@ ORGANIZATION_SEEDS = [
         "slug": "arvind-gcc",
         "label": "Arvind GCC",
         "organization": "Arvind GCC",
-        "website": "www.arvind.com",
+        "website": "arvindgcc.com",
         "logo_path": "assets/arvind-gcc-logo-v2.png",
         "banner_path": None,
         "watermark_path": "assets/watermark-a.png",
@@ -179,8 +188,7 @@ ORGANIZATION_SOCIAL_LINKS = {
         "instagram": "https://www.instagram.com/arvind_limited/",
     },
     "arvind-gcc": {
-        "linkedin": "https://www.linkedin.com/company/arvindlimited",
-        "instagram": "https://www.instagram.com/arvind_limited/",
+        "linkedin": "https://www.linkedin.com/company/arvindgcc",
     },
 }
 
@@ -835,6 +843,12 @@ def build_logo_profile_template(values: dict, assets: dict, *, team: str = "") -
 def build_signature_html(
     template_id: str, raw_values: dict, asset_urls: dict, *, team: str = ""
 ) -> str:
+    # Level 2 manager data is archived for the live templates. Keep it
+    # available to archived builders for future reactivation.
+    if template_id in {"standard", "logo-sidebar"}:
+        raw_values = dict(raw_values)
+        for field in ("manager2FirstName", "manager2LastName", "manager2Email"):
+            raw_values.pop(field, None)
     values = normalize_form_values(
         raw_values,
         organization=asset_urls.get("organization") or "",

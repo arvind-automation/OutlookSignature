@@ -8,12 +8,6 @@
     "managerLastName",
     "managerEmail",
   ];
-  var MANAGER_L2_KEYS = [
-    "manager2FirstName",
-    "manager2LastName",
-    "manager2Email",
-  ];
-
   var DEFAULT_FORM = {
     company: LOCKED_COMPANY,
     firstName: "",
@@ -22,14 +16,11 @@
     designation: "",
     phone: "",
     organization: "Arvind GCC",
-    website: "www.arvind.com",
+    website: "arvindgcc.com",
     address: "",
     managerFirstName: "",
     managerLastName: "",
     managerEmail: "",
-    manager2FirstName: "",
-    manager2LastName: "",
-    manager2Email: "",
   };
 
   var PREFILL_KEYS = [
@@ -42,7 +33,7 @@
     "address",
   ].concat(MANAGER_L1_KEYS);
 
-  // Editable: company, address, L2 manager fields. L1 stays locked from SSO.
+  // The Level 1 manager is locked from SSO; address remains editable.
   var LOCKED_FIELD_KEYS = [
     "firstName",
     "lastName",
@@ -112,12 +103,6 @@
     }
   }
 
-  function clearManagerKeys(keys) {
-    keys.forEach(function (key) {
-      if (fields[key]) fields[key].value = "";
-    });
-  }
-
   function hasAnyData(values, keys) {
     values = values || {};
     return keys.some(function (key) {
@@ -128,25 +113,10 @@
   function resolveManagerLevel(formValues) {
     var form = formValues || {};
     var prefill = bootPrefill();
-    if (hasAnyData(form, MANAGER_L2_KEYS)) {
-      return 2;
-    }
     if (hasAnyData(form, MANAGER_L1_KEYS) || hasAnyData(prefill, MANAGER_L1_KEYS)) {
       return 1;
     }
     return 0;
-  }
-
-  function applyL2PrefillToEmpty() {
-    var prefill = bootPrefill();
-    MANAGER_L2_KEYS.forEach(function (key) {
-      if (!fields[key]) return;
-      var current = (fields[key].value || "").trim();
-      var incoming = (prefill[key] || "").trim();
-      if (!current && incoming) {
-        fields[key].value = incoming;
-      }
-    });
   }
 
   function getFormValues() {
@@ -156,11 +126,6 @@
     });
     if (state.team !== "sales" || state.managerLevel < 1) {
       MANAGER_L1_KEYS.forEach(function (k) {
-        values[k] = "";
-      });
-    }
-    if (state.team !== "sales" || state.managerLevel < 2) {
-      MANAGER_L2_KEYS.forEach(function (k) {
         values[k] = "";
       });
     }
@@ -197,29 +162,6 @@
     if (!isSales) return;
 
     if (els.managerLevel1) els.managerLevel1.hidden = state.managerLevel < 1;
-    if (els.managerLevel2) els.managerLevel2.hidden = state.managerLevel < 2;
-
-    if (els.addManagerL2Btn) {
-      els.addManagerL2Btn.hidden = state.managerLevel >= 2;
-    }
-  }
-
-  function handleAddManagerL2() {
-    state.managerLevel = 2;
-    applyL2PrefillToEmpty();
-    syncManagerSection();
-    lockReadOnlyFields();
-    renderPreview();
-    scheduleSave();
-  }
-
-  function handleRemoveManagerL2() {
-    clearManagerKeys(MANAGER_L2_KEYS);
-    state.managerLevel = 1;
-    syncManagerSection();
-    lockReadOnlyFields();
-    renderPreview();
-    scheduleSave();
   }
 
   function showStatus(message, isError) {
@@ -461,9 +403,6 @@
     values.website =
       (state.orgsBySlug[DEFAULT_FORM.company] || {}).website || DEFAULT_FORM.website;
     values.address = (state.orgsBySlug[DEFAULT_FORM.company] || {}).defaultAddress || "";
-    MANAGER_L2_KEYS.forEach(function (k) {
-      values[k] = "";
-    });
     if (state.team === "sales") {
       state.managerLevel =
         hasAnyData(values, MANAGER_L1_KEYS) || hasAnyData(bootPrefill(), MANAGER_L1_KEYS) ? 1 : 0;
@@ -494,17 +433,6 @@
       fields.address.addEventListener("input", onFormInput);
       fields.address.addEventListener("change", onFormInput);
     }
-    MANAGER_L2_KEYS.forEach(function (key) {
-      if (!fields[key]) return;
-      fields[key].addEventListener("input", onFormInput);
-      fields[key].addEventListener("change", onFormInput);
-    });
-    if (els.addManagerL2Btn) {
-      els.addManagerL2Btn.addEventListener("click", handleAddManagerL2);
-    }
-    if (els.removeManagerL2) {
-      els.removeManagerL2.addEventListener("click", handleRemoveManagerL2);
-    }
     els.form.addEventListener("submit", function (e) {
       e.preventDefault();
     });
@@ -534,9 +462,6 @@
       previewView: document.getElementById("preview-view"),
       managerSection: document.getElementById("manager-section"),
       managerLevel1: document.getElementById("manager-level1"),
-      managerLevel2: document.getElementById("manager-level2"),
-      addManagerL2Btn: document.getElementById("add-manager-l2-btn"),
-      removeManagerL2: document.getElementById("remove-manager-l2"),
     };
 
     fields = {
@@ -552,9 +477,6 @@
       managerFirstName: document.getElementById("managerFirstName"),
       managerLastName: document.getElementById("managerLastName"),
       managerEmail: document.getElementById("managerEmail"),
-      manager2FirstName: document.getElementById("manager2FirstName"),
-      manager2LastName: document.getElementById("manager2LastName"),
-      manager2Email: document.getElementById("manager2Email"),
     };
 
     getOrgData().forEach(function (org) {

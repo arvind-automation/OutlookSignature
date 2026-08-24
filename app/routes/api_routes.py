@@ -5,6 +5,7 @@ from flask import Blueprint, current_app, jsonify, request, session
 from app.auth import current_user, write_audit
 from app.extensions import db
 from app.models import Organization, SavedSignature
+from app.grades import get_allowed_team
 from app.signatures import DEFAULT_FORM, build_signature_html, assets_from_org
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -38,8 +39,8 @@ def _require_api_user():
     return user, None
 
 
-def _session_team(user) -> str:
-    return (session.get("team") or getattr(user, "team", None) or "").strip().lower()
+def _authorized_team(user) -> str | None:
+    return get_allowed_team(getattr(user, "grade", None))
 
 
 @api_bp.get("/organizations")
@@ -64,9 +65,10 @@ def preview():
     if template_id not in current_app.config["ALLOWED_TEMPLATES"]:
         template_id = "standard"
     for_email = bool(payload.get("forEmail"))
-    # Template hierarchy is determined by the authenticated session, never by
-    # client state supplied with the preview request.
-    team = _session_team(user)
+    # Hierarchy access is derived from the persisted grade, never browser state.
+    team = _authorized_team(user)
+    if not team:
+        return jsonify({"error": "A valid grade is required."}), 409
 
     company = LOCKED_ORGANIZATION_SLUG
     org = _locked_organization()
@@ -133,11 +135,17 @@ def get_signature():
             defaults["firstName"] = user.first_name
         if user.last_name:
             defaults["lastName"] = user.last_name
-        return jsonify({"form": defaults, "isDefault": True, "team": _session_team(user)})
+        team = _authorized_team(user)
+        if not team:
+            return jsonify({"error": "A valid grade is required."}), 409
+        return jsonify({"form": defaults, "isDefault": True, "team": team})
 
     form = saved.to_form_dict()
     form["company"] = LOCKED_ORGANIZATION_SLUG
-    return jsonify({"form": form, "isDefault": False, "team": _session_team(user)})
+    team = _authorized_team(user)
+    if not team:
+        return jsonify({"error": "A valid grade is required."}), 409
+    return jsonify({"form": form, "isDefault": False, "team": team})
 
 
 @api_bp.post("/signature")
@@ -145,6 +153,9 @@ def save_signature():
     user, err = _require_api_user()
     if err:
         return err
+    team = _authorized_team(user)
+    if not team:
+        return jsonify({"error": "A valid grade is required."}), 409
 
     payload = request.get_json(silent=True) or {}
     form = dict(payload.get("form") or {})
@@ -175,9 +186,6 @@ def save_signature():
     saved.manager_first_name = (form.get("managerFirstName") or "")[:120]
     saved.manager_last_name = (form.get("managerLastName") or "")[:120]
     saved.manager_email = (form.get("managerEmail") or "")[:255]
-    saved.manager2_first_name = (form.get("manager2FirstName") or "")[:120]
-    saved.manager2_last_name = (form.get("manager2LastName") or "")[:120]
-    saved.manager2_email = (form.get("manager2Email") or "")[:255]
 
     db.session.commit()
     write_audit(
@@ -186,7 +194,7 @@ def save_signature():
         details={
             "templateId": template_id,
             "company": company,
-            "team": _session_team(user),
+            "team": team,
         },
     )
     return jsonify({"ok": True, "form": saved.to_form_dict()})
