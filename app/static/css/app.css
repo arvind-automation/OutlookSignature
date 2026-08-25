@@ -93,11 +93,17 @@
 .grade-reference-modal__hint { margin: 0; color: var(--muted); font-size: .88rem; }
 .grade-reference-close { width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--surface-muted); color: var(--text); font-size: 1.4rem; cursor: pointer; }
 .grade-reference-table-wrap { overflow-x: auto; margin-top: 16px; }
-.grade-reference-table-wrap table { width: 100%; min-width: 850px; border-collapse: separate; border-spacing: 0 7px; font-size: .84rem; text-align: left; }
+.grade-reference-table-wrap table { width: 100%; min-width: 850px; table-layout: fixed; border-collapse: separate; border-spacing: 0 7px; font-size: .84rem; text-align: left; }
+.grade-reference-table__current-grade { width: 24%; }
+.grade-reference-table__current-designation { width: 33%; }
+.grade-reference-table__arrow { width: 6%; }
+.grade-reference-table__new-grade { width: 14%; }
+.grade-reference-table__new-designation { width: 23%; }
 .grade-reference-table th { padding: 10px 12px; color: var(--accent); font-weight: 700; }
 .grade-reference-table__groups th { padding: 12px; background: rgba(139, 21, 56, .10); border-top: 1px solid rgba(139, 21, 56, .18); border-bottom: 1px solid rgba(139, 21, 56, .12); text-align: center; }
-.grade-reference-table__groups .grade-reference-table__spacer { background: transparent; border: 0; }
+.grade-reference-table__groups .grade-reference-table__spacer { background: rgba(139, 21, 56, .10); border-top: 1px solid rgba(139, 21, 56, .18); border-bottom: 1px solid rgba(139, 21, 56, .12); }
 .grade-reference-table__spacer { width: 54px; padding-inline: 0 !important; }
+.grade-reference-table__gcc-label { display: inline-block; transform: translateX(-18px); }
 .grade-reference-table__groups th:first-child { border-radius: 10px 0 0 10px; }
 .grade-reference-table__groups th:last-child { border-radius: 0 10px 10px 0; }
 .grade-reference-row { cursor: pointer; outline: none; transition: transform .16s ease, box-shadow .16s ease; }
@@ -3566,4 +3572,14 @@ h4,
     opacity: 1;
     transform: scaleX(1);
   }
+}
+
+/* Generator header: center the product message within the space between branding and actions. */
+#generator-view .app-header__content {
+  text-align: center;
+}
+
+#generator-view .app-header .product-name {
+  color: #2d2d2d !important;
+  font-weight: 600;
 }

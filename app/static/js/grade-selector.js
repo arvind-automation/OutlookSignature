@@ -125,7 +125,7 @@
   form.addEventListener("submit", function (event) {
     event.preventDefault();
     if (!hiddenInput.value) { search.focus(); openList(); return; }
-    message.textContent = "You have selected " + hiddenInput.value + " as your current grade. Please make sure this is your current grade as per the agreement.";
+    message.textContent = "You have selected " + hiddenInput.value + " as your current grade. Please make sure this is your current grade.";
     modal.hidden = false;
     confirm.focus();
   });

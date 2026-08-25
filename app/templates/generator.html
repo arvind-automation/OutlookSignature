@@ -14,8 +14,6 @@
       alt="Arvind GCC"
     />
     <div class="app-header__content">
-      <h1 class="product-name">MyArvind Signature</h1>
-      <p>Create your branded email signature and copy it into Outlook, Gmail, or Zoho Mail.</p>
     </div>
     <div class="app-header__meta">
       <span id="user-team-badge" class="team-badge">{{ team_label }}</span>
@@ -23,6 +21,7 @@
       {% if is_admin %}
       <a href="{{ url_for('admin.overview') }}" class="btn btn-primary">Admin</a>
       {% endif %}
+      <a href="{{ url_for('auth.grade', change=1) }}" class="btn btn-tint">Change Grade</a>
       <form method="post" action="{{ url_for('auth.logout') }}" style="display:inline;">
         <button type="submit" id="logout-btn" class="btn btn-ghost">Sign Out</button>
       </form>
