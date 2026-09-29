@@ -5,7 +5,7 @@
   <div id="grade-notice" class="grade-notice" role="status">
     <span class="grade-notice__timer" aria-hidden="true"></span>
     <span>Hi, {{ user_name }}. Your current grade is <strong>{{ grade }}</strong>{% if new_grade %} ({{ new_grade }}){% endif %}.</span>
-    <a href="{{ url_for('auth.grade', change=1) }}">Change Grade</a>
+    {% if not grade_locked %}<a href="{{ url_for('auth.grade', change=1) }}">Change Grade</a>{% endif %}
   </div>
   <header class="app-header">
     <img
@@ -21,7 +21,7 @@
       {% if is_admin %}
       <a href="{{ url_for('admin.overview') }}" class="btn btn-primary">Admin</a>
       {% endif %}
-      <a href="{{ url_for('auth.grade', change=1) }}" class="btn btn-tint">Change Grade</a>
+      {% if not grade_locked %}<a href="{{ url_for('auth.grade', change=1) }}" class="btn btn-tint">Change Grade</a>{% endif %}
       <form method="post" action="{{ url_for('auth.logout') }}" style="display:inline;">
         <button type="submit" id="logout-btn" class="btn btn-ghost">Sign Out</button>
       </form>

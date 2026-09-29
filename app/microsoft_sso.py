@@ -10,7 +10,7 @@ from flask import current_app
 GRAPH_ME_URL = "https://graph.microsoft.com/v1.0/me"
 GRAPH_ME_SELECT = (
     "givenName,surname,mail,userPrincipalName,jobTitle,mobilePhone,"
-    "businessPhones,companyName,officeLocation,displayName"
+    "businessPhones,companyName,officeLocation,displayName,onPremisesExtensionAttributes"
 )
 GRAPH_MANAGER_SELECT = (
     "id,givenName,surname,mail,userPrincipalName"
@@ -217,7 +217,10 @@ def fetch_graph_profile(access_token: str) -> dict[str, str]:
         return {}
 
     first, last = _graph_names(me)
+    attributes = me.get("onPremisesExtensionAttributes")
+    raw_grade = attributes.get("extensionAttribute12") if isinstance(attributes, dict) else None
     prefill: dict[str, str] = {
+        "grade": raw_grade.strip().upper() if isinstance(raw_grade, str) else "",
         "firstName": first,
         "lastName": last,
         "email": _graph_email(me),

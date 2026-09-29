@@ -7,6 +7,7 @@ from app.auth import (
     is_admin,
     login_user_session,
     logout_user_session,
+    sync_entra_grade,
     write_audit,
 )
 from app.config import Config
@@ -155,11 +156,12 @@ def microsoft_callback():
         flash(err or "Microsoft sign-in failed.", "error")
         return redirect(url_for("auth.login"))
 
+    sync_entra_grade(user, prefill.pop("grade", None))
     login_user_session(user)
     if prefill:
         # Must set after login_user_session (which clears the session).
         session["profile_prefill"] = prefill
-    return redirect(url_for("auth.grade"))
+    return redirect(url_for("generator.generator" if user.grade_source == "entra" else "auth.grade"))
 
 
 @auth_bp.route("/grade", methods=["GET", "POST"])
@@ -168,6 +170,11 @@ def grade():
     if not user:
         return redirect(url_for("auth.login"))
 
+    if user.grade_source == "entra":
+        if request.method == "POST":
+            abort(403)
+        return redirect(url_for("generator.generator"))
+
     if request.method == "POST":
         selected_grade = (request.form.get("grade") or "").strip().upper()
         if not get_grade_config(selected_grade):
@@ -175,6 +182,7 @@ def grade():
             return render_template("grade.html", user=user, grades=get_selectable_grade_options(), grade_reference_rows=get_grade_reference_rows())
         previous_grade = user.grade
         user.grade = selected_grade
+        user.grade_source = "manual"
         from app.extensions import db
 
         db.session.commit()

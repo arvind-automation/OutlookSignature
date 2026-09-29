@@ -1,6 +1,6 @@
 # Arvind Signature Generator
 
-Internal email signature generator for Arvind Group companies. Employees log in, pick a template style, fill details, preview branded HTML, then copy as PNG or HTML into Outlook, Gmail, or Zoho Mail.
+Internal email signature generator for Arvind Group companies. Employees sign in, receive grade-based signature access, fill details, preview branded HTML, then copy as PNG or HTML into Outlook, Gmail, or Zoho Mail.
 
 There is **no Outlook API or add-in** — "Outlook" means the intended paste destination.
 
@@ -107,14 +107,19 @@ erDiagram
 sequenceDiagram
   participant U as User
   participant A as Auth
-  participant T as Team page
+  participant T as Grade fallback page
   participant G as Generator
   participant API as API
   participant S as signatures.py
 
   U->>A: Login with Microsoft SSO
   A-->>U: Session + Graph prefill
-  U->>T: Pick GCC Standard or Sales Hierarchy
+  alt Entra grade matches the grade mapping
+    A-->>U: Save and lock grade, redirect to generator
+  else Grade unavailable or unrecognized
+    A-->>T: Clear previous grade and request manual selection
+    U->>T: Select and confirm grade
+  end
   U->>G: Open /generator form
   G->>API: GET /api/signature load defaults
   loop Form edits
@@ -128,8 +133,8 @@ sequenceDiagram
 ```
 
 1. `/` → `/login` → Microsoft SSO (allowed `@arvind.*` domains)
-2. SSO prefills name, designation, phone, manager from Graph
-3. `/team` — **Standard (GCC)** vs **Hierarchy (Sales)** with L1/L2 manager fields
+2. SSO prefills name, designation, phone, manager and fetches `onPremisesExtensionAttributes.extensionAttribute12` from Graph `/me` using `$select`.
+3. Recognized legacy or GCC grades automatically open `/generator` with grade-derived access. Missing, null, blank, malformed, or unmapped grades open `/grade`, with its **Know your grade** reference and manual confirmation. `/team` is a legacy redirect.
 4. `/generator` — org + personal fields + live preview
 5. Copy PNG via `html2canvas`, or Copy HTML with base64-embedded images (`forEmail=true`)
 6. Admins view `/admin` audit log
@@ -161,6 +166,22 @@ Preview uses static asset URLs; email/copy path embeds images as base64 so the s
 
 - **Microsoft SSO only:** Azure AD via MSAL; Graph profile/manager → session `profile_prefill`; auto-provisions allowed Arvind emails
 - Session gates generator/API/admin; `is_admin` gates `/admin`
+
+### Entra grade synchronization
+
+Each Microsoft sign-in trims and uppercases `extensionAttribute12`, then validates it against the existing mapping in `app/grades.py` (for example, `M1` maps to `3|A`). Only existing grade codes are accepted; no fuzzy matching is performed.
+
+A valid grade is stored with `grade_source=entra`. Both Change Grade links are hidden, GET `/grade` redirects to the generator, and POST `/grade` returns 403. Ownership is persisted in the database so the lock applies across sessions.
+
+When the grade cannot be resolved, including a Graph failure or missing access token, any previously saved grade and source are cleared. Users must select a grade manually again on that sign-in; confirmation stores `grade_source=manual`. Manual users can change their selection. The next Microsoft sign-in refreshes this decision; active sessions do not poll Entra. Local development login retains its existing manual workflow.
+
+Automatic assignment and fallback produce `grade_synced` and `grade_fallback` audit events without storing full Graph responses or unmapped attribute values.
+
+The normal database bootstrap (`init_db.py`, also called at startup) idempotently adds nullable `users.grade_source` to existing MySQL databases. Existing records remain unclassified until their next sign-in or manual selection. Run the normal bootstrap before serving the updated app; do not use `--reset` for this upgrade. Existing Graph scopes are unchanged.
+
+### Validation
+
+Run `python -m unittest discover -s tests -v` after installing `requirements.txt`. Tests use an isolated in-memory SQLite database and mocked Microsoft requests. After deployment, verify actual tenant sign-ins with a recognized grade and with an empty/unmapped attribute; tenant permissions and live directory data cannot be verified by the mocked suite.
 
 ## Deployment layout
 

@@ -18,6 +18,7 @@ class User(db.Model):
     first_name = db.Column(db.String(120), nullable=True)
     last_name = db.Column(db.String(120), nullable=True)
     grade = db.Column(db.String(32), nullable=True)
+    grade_source = db.Column(db.String(16), nullable=True)
     team = db.Column(db.String(32), nullable=True)
     is_admin = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)

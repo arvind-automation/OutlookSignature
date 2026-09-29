@@ -41,6 +41,12 @@ services:
       FLASK_ENV: ${FLASK_ENV:-development}
       APP_BASE_URL: ${APP_BASE_URL:-http://localhost:5000}
       PUBLIC_ASSET_BASE_URL: ${PUBLIC_ASSET_BASE_URL:-}
+      MICROSOFT_SSO_ENABLED: ${MICROSOFT_SSO_ENABLED:-false}
+      LOCAL_DEV_LOGIN_ENABLED: ${LOCAL_DEV_LOGIN_ENABLED:-false}
+      LOCAL_DEV_EMAIL: ${LOCAL_DEV_EMAIL:-local.user@arvind.in}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID:-}
+      AZURE_CLIENT_SECRET: ${AZURE_CLIENT_SECRET:-}
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID:-}
     depends_on:
       init-db:
         condition: service_completed_successfully

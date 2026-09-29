@@ -5,6 +5,7 @@ import secrets
 from flask import current_app, request, session
 
 from app.extensions import db
+from app.grades import get_grade_config
 from app.models import AuditLog, User
 
 DEMO_PROFILES = {
@@ -122,6 +123,21 @@ def login_user_session(user: User) -> None:
     session["user_id"] = user.id
     session["user_email"] = user.email
     session.permanent = True
+
+
+def sync_entra_grade(user: User, raw_grade: object) -> None:
+    """Refresh grade ownership on every SSO login, including fallback logins."""
+    grade = raw_grade.strip().upper() if isinstance(raw_grade, str) else ""
+    valid = bool(get_grade_config(grade))
+    user.grade = grade if valid else None
+    user.grade_source = "entra" if valid else None
+    write_audit(
+        "grade_synced" if valid else "grade_fallback",
+        user_id=user.id,
+        details={"grade": grade, "source": "entra"} if valid else {
+            "reason": "unmapped" if grade else "unavailable",
+        },
+    )
 
 
 def logout_user_session() -> None:

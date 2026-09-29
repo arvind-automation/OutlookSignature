@@ -37,6 +37,7 @@ def generator():
         is_admin=is_admin(user),
         profile_prefill=profile_prefill,
         grade=user.grade,
+        grade_locked=user.grade_source == "entra",
         new_grade=get_new_grade(user.grade),
         user_name=" ".join(part for part in (user.first_name, user.last_name) if part) or user.email,
     )
