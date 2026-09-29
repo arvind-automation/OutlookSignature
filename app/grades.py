@@ -8,15 +8,15 @@ TEAM_BY_TEMPLATE = {HIERARCHY_TEMPLATE: "sales", STANDARD_TEMPLATE: "gcc"}
 
 # This single table drives authorization, the help modal, and the picker.
 GRADE_REFERENCE_ROWS = (
-    (("T1", "OT", "GET", "MT", "DET", "PGT"), "4|A", HIERARCHY_TEMPLATE, "Trainees"),
-    (("E1",), "4|A", HIERARCHY_TEMPLATE, "Executives"),
-    (("E2",), "4|B", HIERARCHY_TEMPLATE, "Senior Executive / Associate Manager"),
-    (("E3", "MA"), "4|C", HIERARCHY_TEMPLATE, "Assistant Manager"),
-    (("M1",), "3|A", HIERARCHY_TEMPLATE, "Manager"),
-    (("M2", "M3", "M3H1", "GM-G1", "GM-G2"), "3|B", STANDARD_TEMPLATE, "Sr. Manager / Chief Manager / Dy. GM"),
-    (("BMH3", "BMH4", "SGM-G3", "CGM-G4"), "2|A", STANDARD_TEMPLATE, "General Manager / Associate VP"),
-    (("BMH5", "AVP-V1", "JVP-V2"), "2|B", STANDARD_TEMPLATE, "Vice President"),
-    (("BMH6", "BMH7", "BMH8"), "1|A", STANDARD_TEMPLATE, "CEO / CXO / CBO / COO"),
+    (("T1", "OT", "GET", "MT", "DET", "PGT"), "4A", HIERARCHY_TEMPLATE, "Trainees"),
+    (("E1",), "4A", HIERARCHY_TEMPLATE, "Executives"),
+    (("E2",), "4B", HIERARCHY_TEMPLATE, "Senior Executive / Associate Manager"),
+    (("E3", "MA"), "4C", HIERARCHY_TEMPLATE, "Assistant Manager"),
+    (("M1",), "3A", HIERARCHY_TEMPLATE, "Manager"),
+    (("M2", "M3", "M3H1", "GM-G1", "GM-G2"), "3B", STANDARD_TEMPLATE, "Sr. Manager / Chief Manager / Dy. GM"),
+    (("BMH3", "BMH4", "SGM-G3", "CGM-G4"), "2A", STANDARD_TEMPLATE, "General Manager / Associate VP"),
+    (("BMH5", "AVP-V1", "JVP-V2"), "2B", STANDARD_TEMPLATE, "Vice President"),
+    (("BMH6", "BMH7", "BMH8"), "1A", STANDARD_TEMPLATE, "CEO / CXO / CBO / COO"),
 )
 
 

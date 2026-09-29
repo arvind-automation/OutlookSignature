@@ -169,7 +169,7 @@ Preview uses static asset URLs; email/copy path embeds images as base64 so the s
 
 ### Entra grade synchronization
 
-Each Microsoft sign-in trims and uppercases `extensionAttribute12`, then validates it against the existing mapping in `app/grades.py` (for example, `M1` maps to `3|A`). Only existing grade codes are accepted; no fuzzy matching is performed.
+Each Microsoft sign-in trims and uppercases `extensionAttribute12`, then validates it against the existing mapping in `app/grades.py` (for example, `M1` maps to `3A`). Only existing grade codes are accepted; no fuzzy matching is performed.
 
 A valid grade is stored with `grade_source=entra`. Both Change Grade links are hidden, GET `/grade` redirects to the generator, and POST `/grade` returns 403. Ownership is persisted in the database so the lock applies across sessions.
 
@@ -180,6 +180,8 @@ Automatic assignment and fallback produce `grade_synced` and `grade_fallback` au
 The normal database bootstrap (`init_db.py`, also called at startup) idempotently adds nullable `users.grade_source` to existing MySQL databases. Existing records remain unclassified until their next sign-in or manual selection. Run the normal bootstrap before serving the updated app; do not use `--reset` for this upgrade. Existing Graph scopes are unchanged.
 
 ### Validation
+
+GCC codes are `4A`, `4B`, `4C`, `3A`, `3B`, `2A`, `2B`, and `1A`. Normal startup converts previously saved pipe-separated GCC codes to this format while preserving their source. Entra values and new manual selections must use the new codes; legacy company grades such as `M1` remain supported.
 
 Run `python -m unittest discover -s tests -v` after installing `requirements.txt`. Tests use an isolated in-memory SQLite database and mocked Microsoft requests. After deployment, verify actual tenant sign-ins with a recognized grade and with an empty/unmapped attribute; tenant permissions and live directory data cannot be verified by the mocked suite.
 

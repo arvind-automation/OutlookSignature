@@ -135,6 +135,7 @@ def reset_tables(app) -> None:
         db.create_all()
         ensure_manager_columns(app)
         ensure_user_columns(app)
+        normalize_gcc_grades(app)
         ensure_organization_columns(app)
     log.info("Tables recreated.")
 
@@ -147,6 +148,7 @@ def create_tables(app) -> None:
         db.create_all()
         ensure_manager_columns(app)
         ensure_user_columns(app)
+        normalize_gcc_grades(app)
         ensure_organization_columns(app)
     log.info("Tables ready.")
 
@@ -176,6 +178,21 @@ def ensure_user_columns(app) -> None:
                 continue
             log.info("Adding column users.%s", name)
             db.session.execute(text(f"ALTER TABLE users ADD COLUMN {name} {ddl}"))
+        db.session.commit()
+
+
+def normalize_gcc_grades(app) -> None:
+    """Upgrade saved GCC codes without changing grade ownership or audit history."""
+    from app.extensions import db
+    from app.grades import get_selectable_grade_options
+
+    with app.app_context():
+        for option in get_selectable_grade_options():
+            grade = option["code"]
+            db.session.execute(
+                text("UPDATE users SET grade = :grade WHERE grade = :old_grade"),
+                {"grade": grade, "old_grade": grade[0] + "|" + grade[1:]},
+            )
         db.session.commit()
 
 

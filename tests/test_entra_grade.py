@@ -105,7 +105,7 @@ class EntraGradeTests(unittest.TestCase):
             session["user_id"] = user_id
         for url in ("/grade", "/grade?change=1"):
             self.assertEqual(self.client.get(url).location, "/generator")
-            self.assertEqual(self.client.post(url, data={"grade": "1|A"}).status_code, 403)
+            self.assertEqual(self.client.post(url, data={"grade": "1A"}).status_code, 403)
         self.assertEqual(self.user().grade, "M1")
         page = self.client.get("/generator")
         self.assertEqual(page.status_code, 200)
@@ -115,7 +115,7 @@ class EntraGradeTests(unittest.TestCase):
         self.login()
         self.assertEqual(self.client.post("/grade", data={"grade": "unknown"}).status_code, 200)
         self.assertIsNone(self.user().grade)
-        response = self.client.post("/grade", data={"grade": "3|B"})
+        response = self.client.post("/grade", data={"grade": "3B"})
         self.assertEqual(response.location, "/generator")
         self.assertEqual(self.user().grade_source, "manual")
         self.assertEqual(self.client.get("/generator").data.count(b"Change Grade"), 2)
@@ -124,7 +124,7 @@ class EntraGradeTests(unittest.TestCase):
         self.assertEqual(self.client.post("/api/preview", json={"form": {}}).status_code, 200)
         self.login()
         self.assertIsNone(self.user().grade)
-        self.client.post("/grade", data={"grade": "3|B"})
+        self.client.post("/grade", data={"grade": "3B"})
         self.login({"extensionAttribute12": "M1"})
         self.assertEqual(self.user().grade, "M1")
         self.assertEqual(self.user().grade_source, "entra")
@@ -176,7 +176,7 @@ class EntraGradeTests(unittest.TestCase):
                                LOCAL_DEV_EMAIL="test.user@arvind.in")
         self.assertEqual(self.client.post("/auth/local").location, "/grade")
         self.assertIsNone(self.user().grade_source)
-        self.client.post("/grade", data={"grade": "4|A"})
+        self.client.post("/grade", data={"grade": "4A"})
         self.assertEqual(self.user().grade_source, "manual")
 
     def test_existing_database_upgrade_is_idempotent(self):
@@ -198,6 +198,27 @@ class EntraGradeTests(unittest.TestCase):
             ensure_user_columns(self.app)
             ensure_user_columns(self.app)
         self.assertEqual(alterations, ["ALTER TABLE users ADD COLUMN grade_source VARCHAR(16) NULL"])
+
+    def test_saved_gcc_codes_upgrade_preserves_source_and_access(self):
+        from init_db import normalize_gcc_grades
+        from app.grades import get_selectable_grade_options, get_grade_config
+
+        codes = ["4A", "4B", "4C", "3A", "3B", "2A", "2B", "1A"]
+        self.assertEqual([item["code"] for item in get_selectable_grade_options()], codes)
+        for code in codes:
+            old_code = code[0] + "|" + code[1:]
+            self.assertIsNone(get_grade_config(old_code))
+            db.session.add(User(email=f"{code}@arvind.in", password_hash="unused",
+                                grade=old_code, grade_source="entra"))
+        db.session.commit()
+        normalize_gcc_grades(self.app)
+        normalize_gcc_grades(self.app)
+        db.session.expire_all()
+        for code in codes:
+            user = User.query.filter_by(email=f"{code}@arvind.in").one()
+            self.assertEqual(user.grade, code)
+            self.assertEqual(user.grade_source, "entra")
+            self.assertEqual(get_allowed_team(code), "sales" if code in codes[:4] else "gcc")
 
 
 if __name__ == "__main__":
